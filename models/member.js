@@ -12,10 +12,18 @@ export default function defineMember(sequelize) {
       orgId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: 'organizations',
+          key: 'id',
+        },
       },
       userId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
       },
       role: {
         type: DataTypes.ENUM('owner', 'admin', 'voter'),
@@ -38,6 +46,8 @@ export default function defineMember(sequelize) {
         { unique: true, fields: ['orgId', 'userId'] },
         { fields: ['orgId'] },
         { fields: ['userId'] },
+        { fields: ['role'] },
+        { fields: ['status'] },
       ],
     }
   );

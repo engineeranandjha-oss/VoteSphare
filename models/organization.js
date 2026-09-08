@@ -33,6 +33,10 @@ export default function defineOrganization(sequelize) {
       ownerId: {
         type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
       },
     },
     {
@@ -41,6 +45,13 @@ export default function defineOrganization(sequelize) {
         { unique: true, fields: ['slug'] },
         { fields: ['ownerId'] },
       ],
+      hooks: {
+        beforeValidate: (org) => {
+          if (org.slug) {
+            org.slug = org.slug.toLowerCase().trim();
+          }
+        },
+      },
     }
   );
 

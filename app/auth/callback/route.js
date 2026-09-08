@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { syncUser } from '@/lib/auth/user-sync';
 import { NextResponse } from 'next/server';
 
 /**
@@ -8,7 +9,7 @@ import { NextResponse } from 'next/server';
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/';
+  const next = requestUrl.searchParams.get('next') || '/dashboard';
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
 
@@ -21,7 +22,12 @@ export async function GET(request) {
 
   if (code) {
     const supabase = createClient();
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!exchangeError && data?.session?.user) {
+      await syncUser(data.session.user);
+      return NextResponse.redirect(`${requestUrl.origin}${next}`);
+    }
 
     if (!exchangeError) {
       return NextResponse.redirect(`${requestUrl.origin}${next}`);
