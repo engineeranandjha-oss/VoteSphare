@@ -22,7 +22,7 @@ export default function defineElection(sequelize) {
         allowNull: true,
       },
       status: {
-        type: DataTypes.ENUM('draft', 'scheduled', 'live', 'ended', 'published'),
+        type: DataTypes.ENUM('draft', 'scheduled', 'live', 'ended', 'published', 'archived'),
         defaultValue: 'draft',
         allowNull: false,
       },
