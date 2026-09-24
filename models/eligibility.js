@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+import crypto from 'crypto';
 
 export default function defineEligibility(sequelize) {
   const Eligibility = sequelize.define(
@@ -6,7 +7,7 @@ export default function defineEligibility(sequelize) {
     {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: () => crypto.randomUUID(),
         primaryKey: true,
       },
       electionId: {

@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+import crypto from 'crypto';
 
 export default function definePosition(sequelize) {
   const Position = sequelize.define(
@@ -6,7 +7,7 @@ export default function definePosition(sequelize) {
     {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: () => crypto.randomUUID(),
         primaryKey: true,
       },
       electionId: {

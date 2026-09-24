@@ -78,7 +78,7 @@ export async function GET(request, { params }) {
               model: User,
               as: 'user',
               where: Object.keys(userWhere).length > 0 ? userWhere : undefined,
-              attributes: ['id', 'name', 'email', 'avatarUrl'],
+              attributes: ['id', 'name', 'email', 'image'],
               required: Object.keys(userWhere).length > 0,
             },
           ],
@@ -87,7 +87,7 @@ export async function GET(request, { params }) {
       distinct: true,
     });
 
-    return paginatedResponse(rows, page, limit, count);
+    return paginatedResponse(rows, { total: count, page, limit });
   } catch (error) {
     return handleApiError(error);
   }

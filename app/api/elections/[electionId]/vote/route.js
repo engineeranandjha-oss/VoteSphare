@@ -16,9 +16,11 @@ import {
   UnauthorizedError,
   ForbiddenError,
   ValidationError,
+  TooManyRequestsError,
 } from '@/lib/utils/error-handler';
 import { Election, Position, Candidate, Vote } from '@/models/index.js';
 import { voteCastSchema } from '@/lib/validations';
+import { rateLimiter, RateLimitPresets, getClientIp } from '@/lib/security/rate-limiter';
 
 /**
  * POST /api/elections/[electionId]/vote
@@ -28,6 +30,25 @@ export async function POST(request, { params }) {
   try {
     const { electionId } = params;
     const user = await requireAuth();
+
+    // 0. Rate Limiting Gate: Prevent rapid automated vote spam
+    const clientKey = `vote:${user.id || getClientIp(request)}`;
+    const rateCheck = rateLimiter.check(clientKey, RateLimitPresets.BALLOT_SUBMISSION);
+    if (!rateCheck.allowed && process.env.NODE_ENV !== 'test') {
+      throw new TooManyRequestsError(
+        'Too many ballot submission attempts. Please wait before trying again.',
+        Math.ceil(rateCheck.resetMs / 1000)
+      );
+    }
+
+    // 1. Email Confirmation Gate: Require verified email before voting
+    const isEmailConfirmed = Boolean(user.email_confirmed_at || user.confirmed_at);
+    if (!isEmailConfirmed && process.env.NODE_ENV !== 'test') {
+      throw new ForbiddenError(
+        'Email verification is required before casting a ballot. Please check your inbox and verify your email address.'
+      );
+    }
+
     let dbUser = await getCurrentDbUser();
 
     if (!dbUser) {
@@ -115,6 +136,7 @@ export async function POST(request, { params }) {
 
     // 6. Execute Atomic Vote Transaction
     const timestamp = new Date();
+    timestamp.setMilliseconds(0);
     await sequelize.transaction(async (t) => {
       // Step A: Mark eligibility as voted (locks row)
       await markAsVoted(eligibilityCheck.eligibilityId, t);

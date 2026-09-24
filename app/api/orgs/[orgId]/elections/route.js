@@ -116,11 +116,16 @@ export async function GET(request, { params }) {
       return {
         ...plain,
         stats: {
+          positionCount: positionsCount,
           positionsCount,
+          candidateCount: candidatesCount,
           candidatesCount,
+          eligibleVoterCount: totalEligible,
           totalEligible,
+          totalVotes: totalVoted,
           totalVoted,
           turnoutRate: totalEligible > 0 ? ((totalVoted / totalEligible) * 100).toFixed(1) : 0,
+          turnoutPercentage: totalEligible > 0 ? ((totalVoted / totalEligible) * 100).toFixed(1) : 0,
         },
       };
     });

@@ -1,121 +1,164 @@
+import Link from 'next/link';
 import {
-  Shield,
-  Zap,
   Building2,
-  FileCheck,
-  BarChart3,
-  Lock,
+  Users,
+  Layers,
+  Vote,
+  Award,
+  UserCheck,
+  ArrowRight,
+  ShieldCheck,
+  Send,
 } from 'lucide-react';
 
 export default function FeatureGrid() {
-  const features = [
-    {
-      icon: Lock,
-      color: 'from-blue-500 to-indigo-600',
-      textColor: 'text-blue-400',
-      bgColor: 'bg-blue-500/10',
-      borderColor: 'border-blue-500/20',
-      title: 'True Ballot Anonymity',
-      description:
-        'Voter identities are completely decoupled from ballots at the database level. No administrator or auditor can ever reconstruct individual voting choices.',
-    },
-    {
-      icon: Zap,
-      color: 'from-amber-400 to-orange-500',
-      textColor: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
-      borderColor: 'border-amber-500/20',
-      title: 'Multi-Rule Electoral Engine',
-      description:
-        'Execute Plurality (FPTP), 50%+1 Absolute Majority, Supermajority Thresholds (e.g. 60%), and Multi-Seat Top-N elections with automated victory margin analysis.',
-    },
+  const organizerCapabilities = [
     {
       icon: Building2,
-      color: 'from-purple-500 to-pink-600',
-      textColor: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/20',
-      title: 'Multi-Tenant Organizations',
-      description:
-        'Create isolated organizational workspaces for schools, universities, clubs, or enterprises with custom slugs, invitations, and role-based access control (RBAC).',
+      title: 'Create Your Organization',
+      desc: 'Set up custom branded workspaces with member roles (Owner, Admin, Member, Voter).',
     },
     {
-      icon: FileCheck,
-      color: 'from-emerald-400 to-teal-500',
-      textColor: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/10',
-      borderColor: 'border-emerald-500/20',
-      title: 'Cryptographic Audit Receipts',
-      description:
-        'Electors receive unique SHA-256 blind receipts upon casting, enabling independent mathematical verification of ballot inclusion without compromising secrecy.',
+      icon: Users,
+      title: 'Import & Invite Rosters',
+      desc: 'Upload voter lists via CSV or invite participants with one-click email and WhatsApp links.',
     },
     {
-      icon: BarChart3,
-      color: 'from-cyan-400 to-blue-500',
-      textColor: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10',
-      borderColor: 'border-cyan-500/20',
-      title: 'Real-Time Turnout & Quorum',
-      description:
-        'Live participation gauges track registered vs. cast ballots and monitor quorum thresholds, while strictly shielding candidate choices until official certification.',
+      icon: Layers,
+      title: 'Configure Positions & Candidates',
+      desc: 'Build multi-position ballots with candidate manifestos, photo bios, and winner thresholds.',
     },
     {
-      icon: Shield,
-      color: 'from-rose-400 to-red-500',
-      textColor: 'text-rose-400',
-      bgColor: 'bg-rose-500/10',
-      borderColor: 'border-rose-500/20',
-      title: '3-Tier Duplicate Vote Defense',
-      description:
-        'Layered protection combining cryptographic HMAC tokens, MySQL row-level ACID transaction locking, and composite unique database constraints.',
+      icon: Vote,
+      title: 'Track Turnout in Real Time',
+      desc: 'Monitor participation percentages live while strictly shielding interim vote choices.',
+    },
+    {
+      icon: Award,
+      title: 'Publish Certified Outcomes',
+      desc: 'Seal results upon poll closure and export outcome sheets with complete audit trails.',
+    },
+    {
+      icon: Send,
+      title: 'Share Verified Results',
+      desc: 'Distribute public results pages, turnout charts, and high-resolution QR codes.',
+    },
+  ];
+
+  const voterSteps = [
+    {
+      step: '1',
+      title: 'Open Secure Link',
+      desc: 'Access the ballot directly from your email invitation, WhatsApp link, or election code.',
+    },
+    {
+      step: '2',
+      title: 'Verify Eligibility',
+      desc: 'Sign in with Google or confirm your organization membership to access your ballot.',
+    },
+    {
+      step: '3',
+      title: 'Review Candidates',
+      desc: 'Read candidate bios, platforms, and manifestos directly inside the clean ballot interface.',
+    },
+    {
+      step: '4',
+      title: 'Submit & Confirm',
+      desc: 'Cast your selections with one-vote enforcement and receive an instant submission confirmation.',
     },
   ];
 
   return (
-    <section id="features" className="py-20 md:py-32 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-blue-400 uppercase tracking-wider">
-            Engineered For Integrity
+    <div className="space-y-24 py-12">
+      {/* 1. Organizer Capabilities Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 uppercase tracking-wider">
+            <UserCheck className="h-3.5 w-3.5" />
+            <span>Administrative Power</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            Everything You Need for Legitimate Elections
+            Built for the People Who Run Elections
           </h2>
-          <p className="text-base text-slate-400 leading-relaxed font-normal">
-            VoteSphere combines state-of-the-art cryptography, intuitive election configuration, and
-            transparent certification tools into one unified platform.
+          <p className="text-sm sm:text-base text-slate-400">
+            Everything election commissioners, school administrators, committee chairs, and team leads need to manage fair elections without technical friction.
           </p>
         </div>
 
-        {/* Feature Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feat, idx) => {
-            const IconComponent = feat.icon;
+          {organizerCapabilities.map((item, idx) => {
+            const Icon = item.icon;
             return (
               <div
                 key={idx}
-                className="group relative rounded-3xl border border-slate-800 bg-slate-900/70 p-8 shadow-xl backdrop-blur-md transition-all duration-300 hover:border-slate-700 hover:bg-slate-900 hover:-translate-y-1"
+                className="group rounded-3xl border border-slate-800 bg-slate-900/70 p-7 shadow-xl hover:border-slate-700 hover:bg-slate-900 transition-all"
               >
-                {/* Icon */}
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${feat.bgColor} ${feat.textColor} border ${feat.borderColor} shadow-inner transition-transform group-hover:scale-110`}
-                >
-                  <IconComponent className="h-6 w-6" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10 border border-blue-500/20 text-blue-400 mb-5 group-hover:scale-105 transition-transform">
+                  <Icon className="h-6 w-6" />
                 </div>
-
-                {/* Content */}
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
-                  {feat.title}
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed font-normal">
-                  {feat.description}
-                </p>
+                <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
               </div>
             );
           })}
         </div>
-      </div>
-    </section>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/onboarding/organization"
+            className="inline-flex items-center gap-2 text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline"
+          >
+            <span>Set up an election workspace for your team</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </section>
+
+      {/* 2. Voter Experience Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/90 to-slate-950 p-8 sm:p-12 shadow-2xl">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+              <Vote className="h-3.5 w-3.5" />
+              <span>Voter-First Usability</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              A Clear Voting Experience for Every Voter
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400">
+              Designed for maximum accessibility on mobile phones, tablets, and desktops. No app download required.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {voterSteps.map((step, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 space-y-3"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 text-xs font-black">
+                  {step.step}
+                </div>
+                <h3 className="text-base font-bold text-white">{step.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>Ballots are cast with one-vote safeguards and configurable privacy rules.</span>
+            </div>
+            <Link
+              href="/join"
+              className="font-bold text-emerald-400 hover:text-emerald-300 hover:underline"
+            >
+              Have an election code? Join now →
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

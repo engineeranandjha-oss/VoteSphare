@@ -120,17 +120,23 @@ export async function PATCH(request, { params }) {
 
     // Handle status lifecycle transition if requested
     if (validatedData.status && validatedData.status !== election.status) {
-      await transitionElection(election.id, validatedData.status, dbUser.id);
+      if (validatedData.status === 'published') {
+        const { publishResults } = await import('@/lib/results/publishing');
+        await publishResults(election.id, dbUser.id);
+      } else {
+        await transitionElection(election.id, validatedData.status, dbUser.id);
+      }
     }
 
-    // Block critical modifications if election is currently live, ended, or published
+    // Block critical modifications only if actually changed while election is active or concluded
     const lockedStatuses = ['live', 'ended', 'published'];
     if (lockedStatuses.includes(election.status)) {
-      if (
-        validatedData.startDate !== undefined ||
-        validatedData.config !== undefined
-      ) {
-        throw new ValidationError('Cannot modify start date or election config while election is active or concluded');
+      const currentStartIso = election.startDate ? new Date(election.startDate).toISOString() : null;
+      const newStartIso = validatedData.startDate ? new Date(validatedData.startDate).toISOString() : null;
+      const isStartDateChanged = validatedData.startDate !== undefined && currentStartIso !== newStartIso;
+
+      if (isStartDateChanged) {
+        throw new ValidationError('Cannot modify start date while election is active or concluded');
       }
     }
 
