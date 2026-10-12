@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Vote,
@@ -14,12 +15,28 @@ import {
 
 export default function HeroSection() {
   return (
-    <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+    <section className="relative isolate pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden">
+      {/* Background Image Layer */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <Image
+          src="/landing_page_bg.jpeg"
+          alt="VoteSphere Platform Background"
+          fill
+          priority
+          quality={90}
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        {/* Contrast Overlays to ensure high readability while keeping the image clearly visible */}
+        <div className="absolute inset-0 bg-slate-950/65" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-950/40 to-slate-950" />
+      </div>
+
       {/* Background Decorative Ambient Glows */}
       <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-600/15 via-indigo-600/10 to-purple-600/10 rounded-full blur-[140px] -z-10" />
       <div className="pointer-events-none absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-emerald-500/10 rounded-full blur-[100px] -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Column: Hero Text & Real CTAs */}
           <div className="lg:col-span-7 text-center lg:text-left space-y-6">
@@ -27,20 +44,20 @@ export default function HeroSection() {
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-semibold text-slate-300 shadow-sm backdrop-blur-md">
               <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
               <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
-              <span>Trusted Online Election Platform</span>
+              <span>Secure & Verifiable Online Elections</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
               Create, run, and share{' '}
               <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                trusted elections online.
+                secure, verifiable elections online.
               </span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              VoteSphere helps schools, universities, companies, societies, NGOs, families, and groups create elections, invite eligible voters, collect ballots, and publish results with confidence.
+              Create elections, invite eligible voters, collect secure ballots, and publish verifiable results — all from one platform.
             </p>
 
             {/* Primary Action Buttons */}
@@ -64,16 +81,16 @@ export default function HeroSection() {
             {/* Product Capabilities Badges */}
             <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-800/80 max-w-lg mx-auto lg:mx-0 text-left">
               <div>
-                <div className="text-lg sm:text-xl font-black text-white">6 Org Types</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">Schools, Orgs & Groups</div>
+                <div className="text-lg sm:text-xl font-black text-white">6 Organization Types</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Schools, Universities & Groups</div>
               </div>
               <div>
-                <div className="text-lg sm:text-xl font-black text-emerald-400">Multi-Rule</div>
+                <div className="text-lg sm:text-xl font-black text-emerald-400">Flexible Voting Rules</div>
                 <div className="text-[11px] text-slate-400 mt-0.5">Plurality, Majority & Multi-Seat</div>
               </div>
               <div>
-                <div className="text-lg sm:text-xl font-black text-blue-400">Shareable</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">Verified Links & QR Codes</div>
+                <div className="text-lg sm:text-xl font-black text-blue-400">Easy to Share</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Secure Links & QR Codes</div>
               </div>
             </div>
           </div>

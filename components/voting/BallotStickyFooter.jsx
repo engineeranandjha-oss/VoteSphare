@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Lock, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function BallotStickyFooter({
   totalPositions = 0,
@@ -54,10 +54,20 @@ export default function BallotStickyFooter({
             type="button"
             onClick={onReview}
             disabled={disabled || isSubmitting}
+            aria-busy={isSubmitting}
             className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
           >
-            <span>{isSubmitting ? 'Securing Ballot...' : 'Review & Cast Ballot'}</span>
-            <ArrowRight className="h-4 w-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Securing Ballot...</span>
+              </>
+            ) : (
+              <>
+                <span>Review & Cast Ballot</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

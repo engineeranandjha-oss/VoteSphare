@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { downloadBallotReceiptPdf } from '@/lib/utils/receipt-pdf';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function VoteSuccessReceipt({ receipt }) {
   const [copied, setCopied] = useState(false);
@@ -43,6 +44,7 @@ export default function VoteSuccessReceipt({ receipt }) {
 
     try {
       setDownloadingPdf(true);
+      startGlobalProgress();
       await downloadBallotReceiptPdf({
         receiptId,
         electionId,
@@ -52,9 +54,11 @@ export default function VoteSuccessReceipt({ receipt }) {
         isAnonymous,
       });
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to generate ballot receipt PDF:', err);
     } finally {
       setDownloadingPdf(false);
+      completeGlobalProgress();
     }
   }
 
@@ -133,12 +137,13 @@ export default function VoteSuccessReceipt({ receipt }) {
           type="button"
           onClick={handleDownloadReceipt}
           disabled={downloadingPdf}
+          aria-busy={downloadingPdf}
           className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-xl border border-slate-700 hover:border-slate-600 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
         >
           {downloadingPdf ? (
             <>
               <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" />
-              <span>Generating PDF...</span>
+              <span>Preparing & Downloading PDF...</span>
             </>
           ) : (
             <>

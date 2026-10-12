@@ -1,66 +1,40 @@
 import Link from 'next/link';
 import {
   ShieldCheck,
-  Lock,
-  UserCheck,
-  Server,
-  FileText,
-  KeyRound,
   EyeOff,
-  Database,
+  KeyRound,
+  FileText,
+  Server,
   ArrowRight,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function SecurityTrustSection() {
   const securityPillars = [
     {
-      icon: UserCheck,
-      title: 'Verified Authentication',
+      icon: EyeOff,
+      title: 'Ballot Privacy',
       detail:
-        'Secure Google authentication via Supabase Auth ensures that only authentic accounts participate in elections.',
-    },
-    {
-      icon: Lock,
-      title: 'Organization Authorization',
-      detail:
-        'Role-based permissions (Owners, Admins, Members, Voters) isolate election access and management operations.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Eligibility Controls',
-      detail:
-        'Multi-point verification confirms voter membership, roster assignment, and unvoted status prior to ballot issuance.',
-    },
-    {
-      icon: Server,
-      title: 'Server-Side Validation',
-      detail:
-        'All ballot submissions are validated on the server against strict schemas to ensure valid candidate selections.',
+        'Keep voter identity and ballot information appropriately separated within the voting workflow.',
     },
     {
       icon: KeyRound,
-      title: 'Duplicate-Vote Prevention',
+      title: 'Cryptographic Verification',
       detail:
-        'Atomic database transactions lock eligibility records on submission, making replay and double-voting impossible.',
-    },
-    {
-      icon: EyeOff,
-      title: 'Configurable Anonymity',
-      detail:
-        'In anonymous elections, ballot choices are stored in a separate table without foreign keys linking to voter identities.',
+        'Verify election participation through cryptographic receipt information.',
     },
     {
       icon: FileText,
-      title: 'Administrative Audit Logs',
+      title: 'Tamper-Evident Records',
       detail:
-        'Every sensitive action—election creation, date change, and results publication—is logged with timestamps for transparency.',
+        'Use cryptographic verification mechanisms to help detect changes to election records.',
     },
     {
-      icon: Database,
-      title: 'Controlled Publishing',
+      icon: Server,
+      title: 'Secure Voting Sessions',
       detail:
-        'Interim vote counts are shielded while polls are open, with results only published upon official closure by administrators.',
+        'Control voter access and enforce the configured voting rules for each election.',
     },
   ];
 
@@ -76,10 +50,10 @@ export default function SecurityTrustSection() {
                 <span>Security & Integrity</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                Designed for Trust, Privacy & Auditability
+                Security Built Into Every Election
               </h2>
               <p className="text-sm sm:text-base text-slate-400 leading-relaxed font-normal">
-                VoteSphere combines modern web security, eligibility verification, and transparent audit logging so organizations can run elections with complete confidence.
+                VoteSphere is designed to protect voter privacy, ballot integrity, and the verifiability of election results.
               </p>
             </div>
 
@@ -92,36 +66,56 @@ export default function SecurityTrustSection() {
               </div>
             </div>
 
-            {/* Guarantees Grid */}
+            {/* Guarantees Grid (4 Cards) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {securityPillars.map((item, idx) => {
                 const IconComp = item.icon;
                 return (
                   <div
                     key={idx}
-                    className="p-5 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all space-y-2"
+                    className="p-6 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-all space-y-3 flex flex-col justify-between"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 border border-blue-500/20 flex items-center justify-center">
-                      <IconComp className="h-4 w-4" />
+                    <div>
+                      <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 flex items-center justify-center mb-3">
+                        <IconComp className="h-4.5 w-4.5" />
+                      </div>
+                      <h3 className="text-sm font-bold text-white mb-1.5">{item.title}</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed font-normal">
+                        {item.detail}
+                      </p>
                     </div>
-                    <h3 className="text-sm font-bold text-white">{item.title}</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-normal">
-                      {item.detail}
-                    </p>
                   </div>
                 );
               })}
             </div>
 
-            {/* Link to Security Page */}
-            <div className="pt-2 text-center sm:text-left">
-              <Link
-                href="/security"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline"
-              >
-                <span>Read detailed architecture in the Security Center</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+            {/* Verification & Architecture Links */}
+            <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center sm:text-left">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2 justify-center sm:justify-start">
+                  <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+                  <span>Verify Your Election Record</span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Use your verification information to confirm that your election participation was recorded by VoteSphere.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/verify"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-600/15 border border-cyan-500/30 text-xs font-bold text-cyan-300 hover:bg-cyan-600/25 transition-all"
+                >
+                  <span>Verify a Receipt</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  href="/security"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline px-2 py-1"
+                >
+                  <span>Security Center</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

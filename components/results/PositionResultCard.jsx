@@ -1,6 +1,6 @@
 'use client';
 
-export default function PositionResultCard({ position }) {
+export default function PositionResultCard({ position, canStartRunoff = true, onStartRunoff }) {
   const {
     positionName,
     positionDescription,
@@ -37,8 +37,8 @@ export default function PositionResultCard({ position }) {
     }
     if (isTie || status === 'tie') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
-          <span>⚡</span> Exact Tie
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 animate-pulse">
+          <span>⚡</span> Tie — No Unique Winner
         </span>
       );
     }
@@ -90,14 +90,80 @@ export default function PositionResultCard({ position }) {
         </div>
       </div>
 
-      {/* Tie / Runoff Alert Banner */}
-      {requiresRunoff && (
-        <div className="mt-4 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3">
-          <span className="text-xl">⚠️</span>
-          <div className="text-xs text-amber-200">
-            <strong className="font-semibold">Runoff resolution required:</strong> Top candidates
-            are deadlocked or did not reach the threshold. Further administrative resolution is needed.
+      {/* Tie / Deadlock Alert Banner */}
+      {(isTie || status === 'tie') && (
+        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl shrink-0 mt-0.5">⚡</span>
+            <div className="text-xs text-amber-200 space-y-1.5">
+              <div className="font-bold text-amber-300 text-sm">
+                Tie — No Unique Winner
+              </div>
+              <p className="leading-relaxed text-slate-200">
+                {tiedCandidates.length > 0
+                  ? `${tiedCandidates.length} candidates received the highest number of votes.`
+                  : 'Multiple candidates received the highest number of votes.'}
+              </p>
+              {tiedCandidates.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  {tiedCandidates.map((c) => (
+                    <span
+                      key={c.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 text-[11px]"
+                    >
+                      <span>👤 {c.name}</span>
+                      <strong className="font-mono text-amber-200">({c.voteCount || 0} votes)</strong>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="pt-1 text-purple-300 font-semibold flex items-center gap-1">
+                <span>⚠️ Runoff Required</span>
+                <span className="text-slate-400 font-normal">
+                  — A new voting round can be created using the candidates required to resolve this result.
+                </span>
+              </div>
+            </div>
           </div>
+
+          {canStartRunoff && onStartRunoff && (
+            <button
+              type="button"
+              onClick={onStartRunoff}
+              className="shrink-0 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+            >
+              <span>Start Runoff</span>
+              <span>→</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* General Runoff Alert Banner (when not an exact tie, e.g. no majority) */}
+      {!isTie && status !== 'tie' && requiresRunoff && (
+        <div className="mt-4 p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="text-xl shrink-0 mt-0.5">⚠️</span>
+            <div className="text-xs text-purple-200 space-y-1">
+              <div className="font-bold text-purple-300 text-sm">
+                Runoff Required
+              </div>
+              <p className="leading-relaxed text-slate-300">
+                A new voting round can be created using the candidates required to resolve this result.
+              </p>
+            </div>
+          </div>
+
+          {canStartRunoff && onStartRunoff && (
+            <button
+              type="button"
+              onClick={onStartRunoff}
+              className="shrink-0 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20 transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+            >
+              <span>Start Runoff</span>
+              <span>→</span>
+            </button>
+          )}
         </div>
       )}
 

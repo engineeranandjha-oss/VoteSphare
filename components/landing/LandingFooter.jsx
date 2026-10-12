@@ -4,12 +4,10 @@ import Link from 'next/link';
 import Logo from '@/components/common/Logo';
 import {
   Vote,
-  ShieldCheck,
   Lock,
   ArrowRight,
   HelpCircle,
   Mail,
-  FileText,
   Building2,
   GraduationCap,
   Briefcase,

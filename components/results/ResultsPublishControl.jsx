@@ -10,6 +10,7 @@ import {
   Loader2,
   FileCheck,
 } from 'lucide-react';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function ResultsPublishControl({
   electionId,
@@ -29,6 +30,7 @@ export default function ResultsPublishControl({
   async function handlePublish() {
     try {
       setLoading(true);
+      startGlobalProgress();
       setError(null);
       setSuccessMsg(null);
 
@@ -48,6 +50,7 @@ export default function ResultsPublishControl({
       setError(err.message || 'An error occurred during certification.');
     } finally {
       setLoading(false);
+      completeGlobalProgress();
     }
   }
 
@@ -59,6 +62,7 @@ export default function ResultsPublishControl({
 
     try {
       setLoading(true);
+      startGlobalProgress();
       setError(null);
       setSuccessMsg(null);
 
@@ -77,6 +81,7 @@ export default function ResultsPublishControl({
       setError(err.message || 'An error occurred while unpublishing.');
     } finally {
       setLoading(false);
+      completeGlobalProgress();
     }
   }
 
@@ -181,14 +186,20 @@ export default function ResultsPublishControl({
               type="button"
               onClick={handlePublish}
               disabled={loading}
+              aria-busy={loading}
               className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Certifying & Publishing...</span>
+                </>
               ) : (
-                <FileCheck className="h-4 w-4" />
+                <>
+                  <FileCheck className="h-4 w-4" />
+                  <span>Certify & Publish Results</span>
+                </>
               )}
-              <span>Certify & Publish Results</span>
             </button>
           )}
 
@@ -197,14 +208,20 @@ export default function ResultsPublishControl({
               type="button"
               onClick={handleUnpublish}
               disabled={loading}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 hover:text-rose-300 font-bold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              aria-busy={loading}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 hover:text-rose-300 font-bold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Unpublishing Results...</span>
+                </>
               ) : (
-                <Unlock className="h-4 w-4" />
+                <>
+                  <Unlock className="h-4 w-4" />
+                  <span>Unpublish Results</span>
+                </>
               )}
-              <span>Unpublish Results</span>
             </button>
           )}
 

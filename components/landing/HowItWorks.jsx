@@ -5,28 +5,28 @@ export default function HowItWorks() {
   const steps = [
     {
       num: '01',
-      title: 'Create Organization',
-      desc: 'Set up your workspace for your school, company, society, or group.',
+      title: 'Create Your Election',
+      desc: 'Set up your organization, election, positions, candidates, and voting rules.',
     },
     {
       num: '02',
-      title: 'Build Election',
-      desc: 'Configure positions, candidate manifestos, and voting rules.',
+      title: 'Add Eligible Voters',
+      desc: 'Build your voter list and define who can participate.',
     },
     {
       num: '03',
-      title: 'Invite Voters',
-      desc: 'Import rosters via CSV, dispatch emails, or generate notice-board QR codes.',
+      title: 'Share the Ballot',
+      desc: 'Invite voters through secure links, QR codes, and available sharing channels.',
     },
     {
       num: '04',
-      title: 'Voters Verify & Vote',
-      desc: 'Electors cast single-vote ballots from any smartphone or computer.',
+      title: 'Collect Votes',
+      desc: 'Voters securely access their ballot and submit their choices.',
     },
     {
       num: '05',
-      title: 'Publish Results',
-      desc: 'Close polls and share certified outcomes with public summary links.',
+      title: 'Publish & Verify Results',
+      desc: 'Review participation, publish results, and provide verifiable election records.',
     },
   ];
 
@@ -40,10 +40,10 @@ export default function HowItWorks() {
             <span>Product Workflow</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            The 5-Step Civic Lifecycle
+            Run Your Election From Start to Finish
           </h2>
           <p className="text-sm sm:text-base text-slate-400">
-            Create → Invite → Join → Vote → Result → Share
+            Set up your election, invite eligible voters, collect ballots, and publish verifiable results through one connected workflow.
           </p>
         </div>
 

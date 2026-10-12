@@ -17,6 +17,7 @@ import {
   Sparkles,
   ShieldAlert,
 } from 'lucide-react';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function ElectionWizard({ orgId }) {
   const router = useRouter();
@@ -133,6 +134,7 @@ export default function ElectionWizard({ orgId }) {
   async function handleSubmit() {
     try {
       setSubmitting(true);
+      startGlobalProgress();
       setError(null);
 
       // 1. Create Election Record
@@ -228,6 +230,8 @@ export default function ElectionWizard({ orgId }) {
     } catch (err) {
       setError(err.message || 'An error occurred during election creation');
       setSubmitting(false);
+    } finally {
+      completeGlobalProgress();
     }
   }
 
@@ -464,13 +468,20 @@ export default function ElectionWizard({ orgId }) {
             <button
               type="button"
               disabled={submitting}
+              aria-busy={submitting}
               onClick={handleSubmit}
               className="px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-xs sm:text-sm text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
             >
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Building Ballot & Launching...
+                  <span>
+                    {launchAction === 'live'
+                      ? 'Building Ballot & Launching...'
+                      : launchAction === 'scheduled'
+                        ? 'Scheduling Election...'
+                        : 'Creating Election Draft...'}
+                  </span>
                 </>
               ) : (
                 <>
