@@ -76,10 +76,10 @@ export default function HelpPage() {
             <span>Support & Documentation</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-            How can we help you?
+            Guidance When You Need It
           </h1>
           <p className="text-base sm:text-lg text-slate-400">
-            Explore guides for casting ballots, configuring organization elections, and managing voter rosters.
+            Use guided election setup, built-in validation checks, help resources, FAQs, and support channels to keep your election moving.
           </p>
         </div>
 

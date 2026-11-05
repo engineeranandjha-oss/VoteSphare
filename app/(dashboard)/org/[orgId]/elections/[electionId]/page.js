@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import ImageUpload from '@/components/common/ImageUpload';
+import VoterBoosterModal from '@/components/billing/VoterBoosterModal';
 import {
   Vote,
   Users,
@@ -36,7 +37,9 @@ import {
   RotateCcw,
   CheckCheck,
   ShieldAlert,
+  Zap,
 } from 'lucide-react';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function AdminElectionCommandCenterPage() {
   const router = useRouter();
@@ -54,6 +57,7 @@ export default function AdminElectionCommandCenterPage() {
 
   // Lifecycle Action State
   const [transitioning, setTransitioning] = useState(false);
+  const [transitionTarget, setTransitionTarget] = useState(null);
 
   // Position & Candidate Modal States
   const [addPosModalOpen, setAddPosModalOpen] = useState(false);
@@ -84,6 +88,10 @@ export default function AdminElectionCommandCenterPage() {
   const [parsedVotersList, setParsedVotersList] = useState([]);
   const [importingVoters, setImportingVoters] = useState(false);
   const [importResult, setImportResult] = useState(null);
+
+  // Voter Capacity Booster Modal State
+  const [boosterModalOpen, setBoosterModalOpen] = useState(false);
+  const [suggestedBoosterPack, setSuggestedBoosterPack] = useState('booster-250');
 
   // Settings Form State
   const [settingsForm, setSettingsForm] = useState({
@@ -198,6 +206,8 @@ export default function AdminElectionCommandCenterPage() {
   async function handleStatusTransition(newStatus) {
     try {
       setTransitioning(true);
+      setTransitionTarget(newStatus);
+      startGlobalProgress();
       setError(null);
       setSuccessMsg(null);
 
@@ -232,6 +242,8 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Failed to update election status');
     } finally {
       setTransitioning(false);
+      setTransitionTarget(null);
+      completeGlobalProgress();
     }
   }
 
@@ -242,6 +254,7 @@ export default function AdminElectionCommandCenterPage() {
 
     try {
       setCreatingPos(true);
+      startGlobalProgress();
       setError(null);
 
       const res = await fetch(`/api/elections/${electionId}/positions`, {
@@ -268,6 +281,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Error creating position');
     } finally {
       setCreatingPos(false);
+      completeGlobalProgress();
     }
   }
 
@@ -278,6 +292,7 @@ export default function AdminElectionCommandCenterPage() {
 
     try {
       setCreatingCand(true);
+      startGlobalProgress();
       setError(null);
 
       const res = await fetch(`/api/positions/${selectedPosId}/candidates`, {
@@ -308,6 +323,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Error nominating candidate');
     } finally {
       setCreatingCand(false);
+      completeGlobalProgress();
     }
   }
 
@@ -402,6 +418,7 @@ export default function AdminElectionCommandCenterPage() {
 
     try {
       setImportingVoters(true);
+      startGlobalProgress();
       setImportResult(null);
 
       const res = await fetch(`/api/elections/${electionId}/eligibility/import`, {
@@ -412,6 +429,13 @@ export default function AdminElectionCommandCenterPage() {
 
       const json = await res.json();
       if (!res.ok) {
+        if (res.status === 402) {
+          const details = json.error?.details || json.details || {};
+          if (details.suggestedBooster) {
+            setSuggestedBoosterPack(details.suggestedBooster);
+          }
+          setBoosterModalOpen(true);
+        }
         throw new Error(json.message || 'Failed to import voter roster');
       }
 
@@ -424,6 +448,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Failed to import voters');
     } finally {
       setImportingVoters(false);
+      completeGlobalProgress();
     }
   }
 
@@ -431,6 +456,7 @@ export default function AdminElectionCommandCenterPage() {
   async function handleAssignAllOrgMembers() {
     try {
       setImportingVoters(true);
+      startGlobalProgress();
       const res = await fetch(`/api/elections/${electionId}/eligibility`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -451,6 +477,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Error enrolling organization members');
     } finally {
       setImportingVoters(false);
+      completeGlobalProgress();
     }
   }
 
@@ -459,6 +486,7 @@ export default function AdminElectionCommandCenterPage() {
     e.preventDefault();
     try {
       setSavingSettings(true);
+      startGlobalProgress();
       setError(null);
       setSuccessMsg(null);
 
@@ -496,6 +524,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || 'Error saving settings');
     } finally {
       setSavingSettings(false);
+      completeGlobalProgress();
     }
   }
 
@@ -506,6 +535,7 @@ export default function AdminElectionCommandCenterPage() {
     }
 
     try {
+      startGlobalProgress();
       const res = await fetch(`/api/elections/${electionId}`, {
         method: 'DELETE',
       });
@@ -518,6 +548,8 @@ export default function AdminElectionCommandCenterPage() {
       router.push(`/org/${orgId}/elections`);
     } catch (err) {
       setError(err.message || 'Failed to delete election');
+    } finally {
+      completeGlobalProgress();
     }
   }
 
@@ -525,6 +557,7 @@ export default function AdminElectionCommandCenterPage() {
   async function handleDispatchEmails(type = 'invitations') {
     try {
       setDispatchingEmails(true);
+      startGlobalProgress();
       setDispatchStatus(null);
       setError(null);
 
@@ -546,6 +579,7 @@ export default function AdminElectionCommandCenterPage() {
       setError(err.message || `Failed to send ${type}`);
     } finally {
       setDispatchingEmails(false);
+      completeGlobalProgress();
     }
   }
 
@@ -607,7 +641,7 @@ export default function AdminElectionCommandCenterPage() {
               </Link>
               {election?.status === 'live' && (
                 <Link
-                  href={`/vote?electionId=${electionId}`}
+                  href={`/e/${electionId}`}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all shadow-lg shadow-blue-500/20"
                 >
                   <Vote className="h-4 w-4" />
@@ -630,8 +664,8 @@ export default function AdminElectionCommandCenterPage() {
   const isEnded = status === 'ended' || status === 'published';
 
   const votingUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/vote?electionId=${election.id}`
-    : `/vote?electionId=${election.id}`;
+    ? `${window.location.origin}/e/${election.id}`
+    : `/e/${election.id}`;
 
   const whatsAppText = `🗳️ *Official Ballot Invitation: ${election.title}*\n\nCast your verified vote online in the ${org?.name || 'community'} election.\n\n👉 *Vote Now:* ${votingUrl}`;
 
@@ -666,7 +700,7 @@ export default function AdminElectionCommandCenterPage() {
           {/* Quick Action Controls */}
           <div className="flex items-center gap-2">
             <Link
-              href={`/vote?electionId=${election.id}`}
+              href={`/e/${election.id}`}
               target="_blank"
               className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
             >
@@ -729,11 +763,21 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={transitioning || positions.length === 0}
+                  aria-busy={transitioning && transitionTarget === 'live'}
                   onClick={() => handleStatusTransition('live')}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
                 >
-                  {transitioning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                  <span>Open Live Polls Now</span>
+                  {transitioning && transitionTarget === 'live' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Opening Polls...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4" />
+                      <span>Open Live Polls Now</span>
+                    </>
+                  )}
                 </button>
               )}
 
@@ -741,11 +785,21 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={transitioning}
+                  aria-busy={transitioning && transitionTarget === 'ended'}
                   onClick={() => handleStatusTransition('ended')}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-rose-500/20 transition-all flex items-center gap-2"
                 >
-                  {transitioning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                  <span>Close Polls</span>
+                  {transitioning && transitionTarget === 'ended' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Closing Polls...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4" />
+                      <span>Close Polls</span>
+                    </>
+                  )}
                 </button>
               )}
 
@@ -753,11 +807,21 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={transitioning}
+                  aria-busy={transitioning && transitionTarget === 'published'}
                   onClick={() => handleStatusTransition('published')}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-xs font-bold text-white shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2"
                 >
-                  {transitioning ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  <span>Publish Certified Results</span>
+                  {transitioning && transitionTarget === 'published' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Publishing Results...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Publish Certified Results</span>
+                    </>
+                  )}
                 </button>
               )}
 
@@ -765,10 +829,18 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={transitioning}
+                  aria-busy={transitioning && transitionTarget === 'archived'}
                   onClick={() => handleStatusTransition('archived')}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-all flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <span>Archive</span>
+                  {transitioning && transitionTarget === 'archived' ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Archiving...</span>
+                    </>
+                  ) : (
+                    <span>Archive</span>
+                  )}
                 </button>
               )}
             </div>
@@ -1042,6 +1114,15 @@ export default function AdminElectionCommandCenterPage() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
+                  onClick={() => setBoosterModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-400 transition-all flex items-center gap-1.5"
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>Boost Capacity</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setImportModalOpen(true)}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
                 >
@@ -1052,22 +1133,24 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={dispatchingEmails || totalEligible === 0}
+                  aria-busy={dispatchingEmails}
                   onClick={() => handleDispatchEmails('invitations')}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 hover:text-white transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 hover:text-white transition-all flex items-center gap-1.5 disabled:opacity-50"
                 >
                   {dispatchingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5 text-blue-400" />}
-                  <span>Dispatch Invitations</span>
+                  <span>{dispatchingEmails ? 'Dispatching Invitations...' : 'Dispatch Invitations'}</span>
                 </button>
 
                 {isLive && (
                   <button
                     type="button"
                     disabled={dispatchingEmails || totalEligible === 0}
+                    aria-busy={dispatchingEmails}
                     onClick={() => handleDispatchEmails('reminders')}
                     className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-xs font-bold text-white shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5"
                   >
                     {dispatchingEmails ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clock className="h-3.5 w-3.5" />}
-                    <span>Turnout Reminders</span>
+                    <span>{dispatchingEmails ? 'Sending Reminders...' : 'Turnout Reminders'}</span>
                   </button>
                 )}
               </div>
@@ -1341,10 +1424,11 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="submit"
                   disabled={savingSettings}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+                  aria-busy={savingSettings}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {savingSettings ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  <span>Save Parameters</span>
+                  <span>{savingSettings ? 'Saving Parameters...' : 'Save Parameters'}</span>
                 </button>
               </div>
             </form>
@@ -1449,11 +1533,12 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={importingVoters}
+                  aria-busy={importingVoters}
                   onClick={handleAssignAllOrgMembers}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {importingVoters ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-                  <span>Enroll All Organization Members</span>
+                  <span>{importingVoters ? 'Enrolling Organization Members...' : 'Enroll All Organization Members'}</span>
                 </button>
               </div>
             )}
@@ -1478,11 +1563,12 @@ export default function AdminElectionCommandCenterPage() {
                 <button
                   type="button"
                   disabled={importingVoters || parsedVotersList.length === 0}
+                  aria-busy={importingVoters}
                   onClick={handleSubmitBulkImport}
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20"
                 >
                   {importingVoters ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                  <span>Import {parsedVotersList.length} Voters</span>
+                  <span>{importingVoters ? 'Importing Voters...' : `Import ${parsedVotersList.length} Voters`}</span>
                 </button>
               </div>
             )}
@@ -1650,10 +1736,11 @@ export default function AdminElectionCommandCenterPage() {
               <button
                 type="submit"
                 disabled={creatingPos}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20"
+                aria-busy={creatingPos}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md shadow-blue-500/20 disabled:opacity-50"
               >
                 {creatingPos ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                Add Position
+                <span>{creatingPos ? 'Adding Position...' : 'Add Position'}</span>
               </button>
             </div>
           </form>
@@ -1744,15 +1831,34 @@ export default function AdminElectionCommandCenterPage() {
               <button
                 type="submit"
                 disabled={creatingCand}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                aria-busy={creatingCand}
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 disabled:opacity-50"
               >
                 {creatingCand ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-                Add Candidate
+                <span>{creatingCand ? 'Adding Candidate...' : 'Add Candidate'}</span>
               </button>
             </div>
           </form>
         </div>
       )}
+
+      {/* Voter Capacity Booster Modal */}
+      <VoterBoosterModal
+        isOpen={boosterModalOpen}
+        onClose={() => setBoosterModalOpen(false)}
+        orgId={orgId}
+        electionId={electionId}
+        electionTitle={election?.title || 'Current Election'}
+        currentVoterCount={voterTotal || 0}
+        currentLimit={election?.config?.additionalVoters ? 50 + Number(election.config.additionalVoters) : 50}
+        suggestedBooster={suggestedBoosterPack}
+        onSuccess={async () => {
+          await fetchElectionData();
+          await fetchVoters();
+          setSuccessMsg('Voter capacity booster applied successfully!');
+          setTimeout(() => setSuccessMsg(null), 4000);
+        }}
+      />
     </div>
   );
 }

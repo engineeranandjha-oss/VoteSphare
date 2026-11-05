@@ -1,6 +1,7 @@
 import { requireAuth, getCurrentDbUser } from '@/lib/auth/session';
 import { syncUser } from '@/lib/auth/user-sync';
 import { requireElectionManageAccess, isMember } from '@/lib/auth/authorization';
+import { assertCanEnrollVoters, recordUsage } from '@/lib/billing/entitlements';
 import { successResponse, paginatedResponse } from '@/lib/utils/response';
 import {
   handleApiError,
@@ -144,6 +145,9 @@ export async function POST(request, { params }) {
       throw new ValidationError('No eligible members found to assign');
     }
 
+    // Assert organization plan voter capacity limit before bulk assignment
+    await assertCanEnrollVoters(election.orgId, electionId, targetMemberIds.length);
+
     // Prepare bulk records
     const eligibilityRecords = targetMemberIds.map((memberId) => ({
       electionId,
@@ -159,6 +163,13 @@ export async function POST(request, { params }) {
 
     const totalEligibleCount = await Eligibility.count({
       where: { electionId },
+    });
+
+    await recordUsage({
+      orgId: election.orgId,
+      usageType: 'voter_enrolled',
+      quantity: targetMemberIds.length,
+      electionId,
     });
 
     return successResponse(

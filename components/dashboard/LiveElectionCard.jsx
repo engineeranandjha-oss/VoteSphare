@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Radio, ExternalLink, Settings, Copy, Check } from 'lucide-react';
+import { Radio, ExternalLink, Settings, Copy, Check, Vote } from 'lucide-react';
 
-export default function LiveElectionCard({ election, orgId }) {
+export default function LiveElectionCard({ election, orgId, canManage = true }) {
   const [copied, setCopied] = useState(false);
 
   const title = election.title || 'Untitled Election';
   const stats = election.stats || {};
-  const totalEligible = stats.eligibleVoterCount || 0;
-  const totalVoted = stats.totalVotes || 0;
+  const totalEligible = stats.eligibleVoterCount ?? stats.totalEligible ?? 0;
+  const totalVoted = stats.totalVotes ?? stats.totalVoted ?? 0;
   const turnoutPercentage =
     totalEligible > 0 ? Number(((totalVoted / totalEligible) * 100).toFixed(1)) : 0;
+  const positionCount = stats.positionCount ?? stats.positionsCount ?? (election.positions?.length || 0);
+  const candidateCount = stats.candidateCount ?? stats.candidatesCount ?? (election.positions?.reduce((acc, p) => acc + (p.candidates?.length || 0), 0) || 0);
 
   const endDateFormatted = election.endDate
     ? new Date(election.endDate).toLocaleDateString(undefined, {
@@ -93,9 +95,9 @@ export default function LiveElectionCard({ election, orgId }) {
       {/* Action Footer */}
       <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4 text-xs text-slate-400 font-medium">
-          <span>{stats.positionCount || 0} Positions</span>
+          <span>{positionCount} {positionCount === 1 ? 'Position' : 'Positions'}</span>
           <span>•</span>
-          <span>{stats.candidateCount || 0} Candidates</span>
+          <span>{candidateCount} {candidateCount === 1 ? 'Candidate' : 'Candidates'}</span>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -107,13 +109,23 @@ export default function LiveElectionCard({ election, orgId }) {
             <span>Live Turnout</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
-          <Link
-            href={`/org/${orgId}/elections/${election.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all"
-          >
-            <Settings className="h-3.5 w-3.5" />
-            <span>Manage</span>
-          </Link>
+          {canManage ? (
+            <Link
+              href={`/org/${orgId}/elections/${election.id}`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              <span>Manage</span>
+            </Link>
+          ) : (
+            <Link
+              href={`/e/${election.id}`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all"
+            >
+              <Vote className="h-3.5 w-3.5" />
+              <span>Vote Now</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>

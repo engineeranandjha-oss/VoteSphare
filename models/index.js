@@ -8,6 +8,12 @@ import defineCandidate from './candidate.js';
 import defineEligibility from './eligibility.js';
 import defineVote from './vote.js';
 import defineAuditLog from './auditlog.js';
+import defineSubscriptionPlan from './subscriptionplan.js';
+import defineOrganizationSubscription from './organizationsubscription.js';
+import definePayment from './payment.js';
+import defineInvoice from './invoice.js';
+import defineUsageRecord from './usagerecord.js';
+import defineWebhookEvent from './webhookevent.js';
 
 // Initialize Models
 const User = defineUser(sequelize);
@@ -19,6 +25,12 @@ const Candidate = defineCandidate(sequelize);
 const Eligibility = defineEligibility(sequelize);
 const Vote = defineVote(sequelize);
 const AuditLog = defineAuditLog(sequelize);
+const SubscriptionPlan = defineSubscriptionPlan(sequelize);
+const OrganizationSubscription = defineOrganizationSubscription(sequelize);
+const Payment = definePayment(sequelize);
+const Invoice = defineInvoice(sequelize);
+const UsageRecord = defineUsageRecord(sequelize);
+const WebhookEvent = defineWebhookEvent(sequelize);
 
 // User <-> Organization (Owner)
 User.hasMany(Organization, { foreignKey: 'ownerId', as: 'ownedOrganizations' });
@@ -78,6 +90,48 @@ AuditLog.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
 User.hasMany(AuditLog, { foreignKey: 'userId', as: 'auditLogs' });
 AuditLog.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// ==========================================
+// Billing & Subscription Associations
+// ==========================================
+
+// Organization <-> OrganizationSubscription
+Organization.hasMany(OrganizationSubscription, { foreignKey: 'orgId', as: 'subscriptions', onDelete: 'CASCADE' });
+OrganizationSubscription.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
+
+// SubscriptionPlan <-> OrganizationSubscription
+SubscriptionPlan.hasMany(OrganizationSubscription, { foreignKey: 'planId', as: 'subscriptions' });
+OrganizationSubscription.belongsTo(SubscriptionPlan, { foreignKey: 'planId', as: 'plan' });
+
+// Organization <-> Payment
+Organization.hasMany(Payment, { foreignKey: 'orgId', as: 'payments' });
+Payment.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
+
+// OrganizationSubscription <-> Payment
+OrganizationSubscription.hasMany(Payment, { foreignKey: 'subscriptionId', as: 'payments' });
+Payment.belongsTo(OrganizationSubscription, { foreignKey: 'subscriptionId', as: 'subscription' });
+
+// User <-> Payment
+User.hasMany(Payment, { foreignKey: 'userId', as: 'payments' });
+Payment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Payment <-> Invoice
+Payment.hasOne(Invoice, { foreignKey: 'paymentId', as: 'invoice' });
+Invoice.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
+
+// Organization <-> Invoice
+Organization.hasMany(Invoice, { foreignKey: 'orgId', as: 'invoices' });
+Invoice.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
+
+// Organization & Subscription & Election <-> UsageRecord
+Organization.hasMany(UsageRecord, { foreignKey: 'orgId', as: 'usageRecords', onDelete: 'CASCADE' });
+UsageRecord.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
+
+OrganizationSubscription.hasMany(UsageRecord, { foreignKey: 'subscriptionId', as: 'usageRecords' });
+UsageRecord.belongsTo(OrganizationSubscription, { foreignKey: 'subscriptionId', as: 'subscription' });
+
+Election.hasMany(UsageRecord, { foreignKey: 'electionId', as: 'usageRecords' });
+UsageRecord.belongsTo(Election, { foreignKey: 'electionId', as: 'election' });
+
 const db = {
   sequelize,
   User,
@@ -89,6 +143,12 @@ const db = {
   Eligibility,
   Vote,
   AuditLog,
+  SubscriptionPlan,
+  OrganizationSubscription,
+  Payment,
+  Invoice,
+  UsageRecord,
+  WebhookEvent,
 };
 
 export default db;
@@ -103,4 +163,10 @@ export {
   Eligibility,
   Vote,
   AuditLog,
+  SubscriptionPlan,
+  OrganizationSubscription,
+  Payment,
+  Invoice,
+  UsageRecord,
+  WebhookEvent,
 };

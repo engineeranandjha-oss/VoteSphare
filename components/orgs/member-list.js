@@ -9,6 +9,7 @@ import {
   Calendar,
   Loader2,
   Users,
+  Send,
 } from 'lucide-react';
 
 /**
@@ -20,12 +21,14 @@ export default function MemberList({
   callerRole,
   onRoleChange,
   onRemoveMember,
+  onResendInvite,
   loading = false,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [removingId, setRemovingId] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
 
   const canManage = callerRole === 'owner' || callerRole === 'admin';
 
@@ -43,7 +46,18 @@ export default function MemberList({
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  const handleResend = async (member) => {
+    if (!onResendInvite || resendingId) return;
+    try {
+      setResendingId(member.id);
+      await onResendInvite(member);
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   const handleRemove = async (member) => {
+    if (removingId) return;
     const userName = member.user?.name || member.user?.email || 'this member';
     const isSelf = member.userId === currentUserId;
 
@@ -255,24 +269,42 @@ export default function MemberList({
 
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
-                        {isOwnerMember ? (
-                          <span className="text-xs text-muted-foreground/60 italic">Owner</span>
-                        ) : (canManage || isSelf) ? (
-                          <button
-                            onClick={() => handleRemove(member)}
-                            disabled={isRemoving}
-                            title={isSelf ? 'Leave Organization' : 'Remove Member'}
-                            className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus:outline-none disabled:opacity-50"
-                          >
-                            {isRemoving ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-destructive" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/40">—</span>
-                        )}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {member.status === 'pending' && canManage && onResendInvite && (
+                            <button
+                              onClick={() => handleResend(member)}
+                              disabled={isRemoving || resendingId === member.id}
+                              aria-busy={resendingId === member.id}
+                              title="Resend Invitation Email & Link"
+                              className="inline-flex items-center justify-center rounded-lg p-2 text-primary transition-colors hover:bg-primary/10 focus:outline-none disabled:opacity-50"
+                            >
+                              {resendingId === member.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </button>
+                          )}
+                          {isOwnerMember ? (
+                            <span className="text-xs text-muted-foreground/60 italic">Owner</span>
+                          ) : (canManage || isSelf) ? (
+                            <button
+                              onClick={() => handleRemove(member)}
+                              disabled={isRemoving || resendingId === member.id}
+                              aria-busy={isRemoving}
+                              title={isSelf ? 'Leave Organization' : 'Remove Member'}
+                              className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus:outline-none disabled:opacity-50"
+                            >
+                              {isRemoving ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-destructive" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/40">—</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

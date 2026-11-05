@@ -131,6 +131,10 @@ export async function PATCH(request, { params }) {
         : null;
     }
 
+    if (validatedData.logo !== undefined) {
+      organization.logo = validatedData.logo ? validatedData.logo.trim() : null;
+    }
+
     await organization.save();
 
     return successResponse(organization, 'Organization updated successfully');

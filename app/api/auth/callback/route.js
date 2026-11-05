@@ -9,14 +9,14 @@ import { NextResponse } from 'next/server';
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') || '/dashboard';
+  const next = requestUrl.searchParams.get('next') || requestUrl.searchParams.get('redirect') || '/dashboard';
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
 
   if (error) {
     const errorMsg = error_description || error;
     return NextResponse.redirect(
-      `${requestUrl.origin}/login?error=${encodeURIComponent(errorMsg)}`
+      `${requestUrl.origin}/auth/login?error=${encodeURIComponent(errorMsg)}`
     );
   }
 
@@ -35,9 +35,9 @@ export async function GET(request) {
     }
 
     return NextResponse.redirect(
-      `${requestUrl.origin}/login?error=${encodeURIComponent(exchangeError.message)}`
+      `${requestUrl.origin}/auth/login?error=${encodeURIComponent(exchangeError.message)}`
     );
   }
 
-  return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_callback_failed`);
+  return NextResponse.redirect(`${requestUrl.origin}/auth/login?error=auth_callback_failed`);
 }

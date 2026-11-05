@@ -6,7 +6,18 @@ import TurnoutWidget from '@/components/results/TurnoutWidget';
 import PositionResultCard from '@/components/results/PositionResultCard';
 import ResultsExportBar from '@/components/results/ResultsExportBar';
 import QuorumBreakdownCard from '@/components/results/QuorumBreakdownCard';
-import { ArrowLeft, RefreshCw, CheckCircle2, ShieldCheck, Lock, AlertTriangle } from 'lucide-react';
+import RunoffModal from '@/components/results/RunoffModal';
+import {
+  ArrowLeft,
+  RefreshCw,
+  CheckCircle2,
+  ShieldCheck,
+  Lock,
+  AlertTriangle,
+  GitFork,
+  ArrowRight,
+  ShieldAlert,
+} from 'lucide-react';
 
 export default function PublicResultsPage({ params }) {
   const { electionId } = params;
@@ -15,6 +26,7 @@ export default function PublicResultsPage({ params }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showRunoffModal, setShowRunoffModal] = useState(false);
 
   const fetchResults = useCallback(async (isManualRefresh = false) => {
     try {
@@ -88,6 +100,13 @@ export default function PublicResultsPage({ params }) {
   const isLive = data.status === 'live';
   const isEnded = data.status === 'ended';
 
+  const hasRunoffs = data.hasRunoffsRequired || (data.positions && data.positions.some((p) => p.requiresRunoff || p.isTie || p.status === 'tie'));
+  const childElectionId = data.config?.runoff?.childElectionId;
+  const childElectionTitle = data.config?.runoff?.childElectionTitle;
+  const hasChildRunoff = Boolean(childElectionId);
+  const canStartRunoff = !hasChildRunoff && (hasRunoffs || data.hasTies);
+  const positionsToRunoff = (data.positions || []).filter((p) => p.requiresRunoff || p.isTie || p.status === 'tie');
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8 selection:bg-blue-500 selection:text-white">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -146,6 +165,11 @@ export default function PublicResultsPage({ params }) {
             <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {data.electionTitle || 'Election Results'}
             </h1>
+            {data.config?.runoff?.isRunoff && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider">
+                <span>⚡</span> Runoff Round {data.config.runoff.round || 2}
+              </div>
+            )}
             {data.organization && (
               <p className="text-sm font-medium text-slate-400 mt-2">
                 Organized by <strong className="text-slate-200">{data.organization.name}</strong>
@@ -153,6 +177,64 @@ export default function PublicResultsPage({ params }) {
             )}
           </div>
         </div>
+
+        {/* Linked Child Runoff Active Banner for Electors */}
+        {data.config?.runoff?.childElectionId && (
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/70 via-slate-900 to-indigo-950/70 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center shrink-0">
+                <GitFork className="h-5 w-5" />
+              </div>
+              <div className="text-xs space-y-1">
+                <div className="font-bold text-white text-sm">
+                  Runoff Round In Progress
+                </div>
+                <p className="text-slate-300 leading-relaxed">
+                  A linked runoff election (<strong>{data.config.runoff.childElectionTitle || 'Runoff Round'}</strong>) is active to resolve undecided positions.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href={`/e/${data.config.runoff.childElectionId}`}
+              className="shrink-0 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all flex items-center gap-1.5 self-start sm:self-center"
+            >
+              <span>Go to Runoff Ballot</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
+
+        {/* Runoff Required Action Callout */}
+        {canStartRunoff && (
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/70 border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center shrink-0">
+                <ShieldAlert className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wide">
+                  ⚡ Deadlock Resolution
+                </div>
+                <h3 className="font-bold text-white text-base">
+                  Runoff Required — No Unique Winner Determined
+                </h3>
+                <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                  Positions in this election require a runoff round according to the election rules. VoteSphere can automatically initialize the linked runoff round while preserving this election as immutable Round 1.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowRunoffModal(true)}
+              className="shrink-0 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all cursor-pointer flex items-center gap-2 self-start sm:self-center"
+            >
+              <GitFork className="h-4 w-4" />
+              <span>Start Runoff</span>
+            </button>
+          </div>
+        )}
 
         {/* Turnout Overview Widget */}
         {data.turnout && (
@@ -183,7 +265,12 @@ export default function PublicResultsPage({ params }) {
 
             <div className="space-y-6">
               {data.positions.map((pos) => (
-                <PositionResultCard key={pos.positionId} position={pos} />
+                <PositionResultCard
+                  key={pos.positionId}
+                  position={pos}
+                  canStartRunoff={canStartRunoff}
+                  onStartRunoff={() => setShowRunoffModal(true)}
+                />
               ))}
             </div>
           </div>
@@ -235,6 +322,25 @@ export default function PublicResultsPage({ params }) {
           Powered by <strong>VoteSphere</strong> — Secure, Anonymous & Multi-Tenant Voting Engine
         </div>
       </div>
+
+      {/* Runoff Creation Review & Confirmation Modal */}
+      <RunoffModal
+        isOpen={showRunoffModal}
+        onClose={() => setShowRunoffModal(false)}
+        electionId={electionId}
+        electionTitle={data.electionTitle}
+        round={data.config?.runoff?.round || 1}
+        orgId={data.orgId || data.organization?.id}
+        votingRule={data.config?.winningRule || 'plurality'}
+        totalEligibleVoters={data.turnout?.totalEligible || 0}
+        positionsToRunoff={positionsToRunoff}
+        onRunoffCreated={(runoff) => {
+          fetchResults(false);
+          if (runoff?.id) {
+            window.location.href = `/e/${runoff.id}`;
+          }
+        }}
+      />
     </main>
   );
 }

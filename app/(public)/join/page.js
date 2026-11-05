@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import PublicNavbar from '@/components/navigation/PublicNavbar';
 import LandingFooter from '@/components/landing/LandingFooter';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 function JoinContent() {
   const router = useRouter();
@@ -37,6 +38,7 @@ function JoinContent() {
     setError('');
     setInfoMessage('');
     setLoading(true);
+    startGlobalProgress();
 
     try {
       // 1. Check if the input is a full URL
@@ -68,6 +70,8 @@ function JoinContent() {
     } catch (err) {
       setError(err.message || 'Unable to resolve election code. Please verify with your election organizer.');
       setLoading(false);
+    } finally {
+      completeGlobalProgress();
     }
   };
 
@@ -127,10 +131,14 @@ function JoinContent() {
             <button
               type="submit"
               disabled={loading || !inputCode.trim()}
+              aria-busy={loading}
               className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Connecting to Election...</span>
+                </>
               ) : (
                 <>
                   <span>Continue to Election</span>

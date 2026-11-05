@@ -1,6 +1,7 @@
 import { requireAuth, getCurrentDbUser } from '@/lib/auth/session';
 import { syncUser } from '@/lib/auth/user-sync';
 import { requireElectionManageAccess, isMember } from '@/lib/auth/authorization';
+import { canUseCustomBranding } from '@/lib/billing/entitlements';
 import { transitionElection } from '@/lib/elections/lifecycle';
 import { successResponse } from '@/lib/utils/response';
 import {
@@ -77,11 +78,13 @@ export async function GET(request, { params }) {
 
     // Check current user's eligibility status
     const userEligibility = eligibilities.find((e) => e.memberId === dbUser.id) || null;
+    const customBranding = await canUseCustomBranding(election.orgId);
 
     delete plain.eligibilities;
 
     return successResponse({
       ...plain,
+      customBranding,
       userEligibilityStatus: userEligibility ? userEligibility.status : 'unknown',
       stats: {
         totalEligible,

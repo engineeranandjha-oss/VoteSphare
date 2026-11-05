@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import MemberList from '@/components/orgs/member-list';
 import {
   Users,
@@ -14,8 +15,10 @@ import {
   X,
   Mail,
   Shield,
+  ShieldAlert,
   User,
 } from 'lucide-react';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function OrgMembersPage() {
   const { orgId } = useParams();
@@ -79,38 +82,48 @@ export default function OrgMembersPage() {
 
   // Handle Role Change
   const handleRoleChange = async (memberId, newRole) => {
-    const res = await fetch(`/api/members/${memberId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: newRole }),
-    });
+    try {
+      startGlobalProgress();
+      const res = await fetch(`/api/members/${memberId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      });
 
-    const json = await res.json();
-    if (!res.ok || !json.success) {
-      alert(json.message || 'Failed to update member role');
-      throw new Error(json.message);
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        alert(json.message || 'Failed to update member role');
+        throw new Error(json.message);
+      }
+
+      setMembers((prev) =>
+        prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
+      );
+    } finally {
+      completeGlobalProgress();
     }
-
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    );
   };
 
   // Handle Remove Member
   const handleRemoveMember = async (memberId) => {
-    const res = await fetch(`/api/members/${memberId}`, {
-      method: 'DELETE',
-    });
+    try {
+      startGlobalProgress();
+      const res = await fetch(`/api/members/${memberId}`, {
+        method: 'DELETE',
+      });
 
-    const json = await res.json();
-    if (!res.ok || !json.success) {
-      alert(json.message || 'Failed to remove member');
-      return;
-    }
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        alert(json.message || 'Failed to remove member');
+        return;
+      }
 
-    setMembers((prev) => prev.filter((m) => m.id !== memberId));
-    if (org) {
-      setOrg((prev) => ({ ...prev, memberCount: Math.max(0, (prev.memberCount || 1) - 1) }));
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      if (org) {
+        setOrg((prev) => ({ ...prev, memberCount: Math.max(0, (prev.memberCount || 1) - 1) }));
+      }
+    } finally {
+      completeGlobalProgress();
     }
   };
 
@@ -121,6 +134,7 @@ export default function OrgMembersPage() {
 
     try {
       setInviting(true);
+      startGlobalProgress();
       setInviteError(null);
       setInviteResult(null);
 
@@ -144,6 +158,40 @@ export default function OrgMembersPage() {
       setInviteError(err.message || 'Failed to send invitation');
     } finally {
       setInviting(false);
+      completeGlobalProgress();
+    }
+  };
+
+  // Handle Resend Invite for pending members
+  const handleResendInvite = async (member) => {
+    const userEmail = member.user?.email;
+    if (!userEmail) return;
+
+    try {
+      setInviting(true);
+      startGlobalProgress();
+      setInviteError(null);
+      setInviteResult(null);
+      setInviteModalOpen(true);
+
+      const res = await fetch(`/api/orgs/${orgId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, role: member.role || 'voter' }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setInviteError(json.message || 'Failed to resend invitation');
+        return;
+      }
+
+      setInviteResult(json.data);
+    } catch (err) {
+      setInviteError(err.message || 'Failed to resend invitation');
+    } finally {
+      setInviting(false);
+      completeGlobalProgress();
     }
   };
 
@@ -154,6 +202,30 @@ export default function OrgMembersPage() {
   };
 
   const canManage = org?.userRole === 'owner' || org?.userRole === 'admin';
+
+  if (!loading && org && !canManage) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+        <div className="rounded-3xl border border-border/80 bg-card/70 p-8 sm:p-12 shadow-2xl space-y-4 backdrop-blur-xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
+          <p className="mx-auto max-w-md text-xs text-muted-foreground leading-relaxed">
+            You are signed in as a voter in this organization. Member directory management, invitations, and role configurations are restricted to owners and admins.
+          </p>
+          <div className="pt-4">
+            <Link
+              href={`/org/${orgId}/dashboard`}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground shadow-md transition-all hover:opacity-90"
+            >
+              Return to Workspace Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -217,6 +289,7 @@ export default function OrgMembersPage() {
         callerRole={org?.userRole}
         onRoleChange={handleRoleChange}
         onRemoveMember={handleRemoveMember}
+        onResendInvite={handleResendInvite}
         loading={loading}
       />
 
@@ -251,15 +324,27 @@ export default function OrgMembersPage() {
             {/* Success state with copyable link */}
             {inviteResult ? (
               <div className="space-y-4 py-2">
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-500">
-                  <div className="flex items-center gap-2 font-semibold text-sm">
-                    <Check className="h-4 w-4" />
-                    <span>Invitation Sent Successfully!</span>
+                {inviteResult.emailSent ? (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-500">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                      <Check className="h-4 w-4" />
+                      <span>Invitation Email Sent!</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      An official invitation email was dispatched to <strong>{inviteResult.email}</strong>.
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    An email invitation was dispatched to <strong>{inviteResult.email}</strong>.
-                  </p>
-                </div>
+                ) : (
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Invitation Created (Direct Link Ready)</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {inviteResult.emailMessage || 'Email delivery was skipped.'} Please copy and share the direct invitation link below with <strong>{inviteResult.email}</strong>.
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">
@@ -385,12 +470,13 @@ export default function OrgMembersPage() {
                   <button
                     type="submit"
                     disabled={inviting || !inviteEmail}
+                    aria-busy={inviting}
                     className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                   >
                     {inviting ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Sending Invite...</span>
+                        <span>Sending Invitation...</span>
                       </>
                     ) : (
                       <span>Send Invitation</span>

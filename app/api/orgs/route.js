@@ -43,6 +43,7 @@ export async function POST(request) {
           slug: validatedData.slug.toLowerCase().trim(),
           type: validatedData.type || 'other',
           description: validatedData.description ? validatedData.description.trim() : null,
+          logo: validatedData.logo ? validatedData.logo.trim() : null,
           ownerId: dbUser.id,
         },
         { transaction: t }

@@ -1,6 +1,6 @@
 import OrgOnboardingWizard from '@/components/orgs/OrgOnboardingWizard';
 import Link from 'next/link';
-import { Vote } from 'lucide-react';
+import Logo from '@/components/common/Logo';
 
 export const metadata = {
   title: 'Welcome to VoteSphere — Organization Setup',
@@ -11,19 +11,17 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
       {/* Top Header */}
-      <div className="max-w-4xl mx-auto mb-10 text-center">
-        <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/25 transition-transform group-hover:scale-105">
-            <Vote className="h-5 w-5" />
-          </div>
-          <span className="text-2xl font-black tracking-tight text-white">
+      <div className="max-w-3xl mx-auto mb-8 sm:mb-10 text-center flex flex-col items-center">
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-5 sm:mb-6 group focus:outline-none focus:ring-2 focus:ring-blue-500/40 rounded-xl p-1">
+          <Logo size={38} className="group-hover:scale-105 transition-transform shrink-0" />
+          <span className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             Vote<span className="text-blue-400">Sphere</span>
           </span>
         </Link>
-        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight px-2">
           Welcome! Let&apos;s Set Up Your Workspace
         </h1>
-        <p className="text-sm text-slate-400 mt-2 max-w-md mx-auto">
+        <p className="text-xs sm:text-sm text-slate-400 mt-2 sm:mt-2.5 max-w-md mx-auto leading-relaxed px-2">
           Create your organization in just 3 quick steps to start configuring ballots and inviting voters.
         </p>
       </div>

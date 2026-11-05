@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Logo from '@/components/common/Logo';
 import { usePathname } from 'next/navigation';
 import {
   Vote,
@@ -10,6 +11,7 @@ import {
   Settings,
   LayoutDashboard,
   ExternalLink,
+  CreditCard,
 } from 'lucide-react';
 
 export default function DashboardHeader({ org }) {
@@ -18,11 +20,18 @@ export default function DashboardHeader({ org }) {
   const orgName = org?.name || 'Organization Workspace';
   const orgSlug = org?.slug || '';
 
+  const canManage = org?.userRole === 'owner' || org?.userRole === 'admin';
+
   const navItems = [
     { label: 'Overview', href: `/org/${orgId}/dashboard`, icon: LayoutDashboard },
     { label: 'Elections', href: `/org/${orgId}/elections`, icon: Calendar },
-    { label: 'Members', href: `/org/${orgId}/members`, icon: Users },
-    { label: 'Settings', href: `/org/${orgId}/settings`, icon: Settings },
+    ...(canManage
+      ? [
+          { label: 'Members', href: `/org/${orgId}/members`, icon: Users },
+          { label: 'Billing', href: `/org/${orgId}/billing`, icon: CreditCard },
+          { label: 'Settings', href: `/org/${orgId}/settings`, icon: Settings },
+        ]
+      : []),
   ];
 
   return (
@@ -32,9 +41,16 @@ export default function DashboardHeader({ org }) {
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Link href={`/org/${orgId}/dashboard`} className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/25 shrink-0">
-                <Vote className="h-5 w-5" />
-              </div>
+              {org?.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={org.logo}
+                  alt={orgName}
+                  className="w-9 h-9 rounded-xl object-contain bg-slate-900 border border-slate-800 shrink-0"
+                />
+              ) : (
+                <Logo size={36} className="group-hover:scale-105 transition-transform shrink-0" />
+              )}
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h1 className="text-base font-black text-white truncate group-hover:text-blue-400 transition-colors">
@@ -66,14 +82,16 @@ export default function DashboardHeader({ org }) {
               </a>
             )}
 
-            <Link
-              href={`/org/${orgId}/elections/new`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Create Election</span>
-              <span className="sm:hidden">New</span>
-            </Link>
+            {canManage && (
+              <Link
+                href={`/org/${orgId}/elections/new`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create Election</span>
+                <span className="sm:hidden">New</span>
+              </Link>
+            )}
           </div>
         </div>
 

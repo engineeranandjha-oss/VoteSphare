@@ -106,13 +106,20 @@ export async function POST(request, { params }) {
     const inviteLink = `${appUrl}/join/${token}`;
 
     // Dispatch email
-    await sendInvitationEmail({
+    const emailResult = await sendInvitationEmail({
       email: cleanEmail,
       orgName: organization.name,
       inviterName: dbUser.name || 'An administrator',
       role: role || 'voter',
       inviteLink,
     });
+
+    const emailSent = Boolean(emailResult?.success);
+    const emailMessage = emailResult?.deliveryDisabled
+      ? 'Email delivery is disabled on this server. Direct invitation link is ready to share.'
+      : emailResult?.error
+      ? `Email delivery could not be completed (${emailResult.error}). Direct invitation link is ready to share.`
+      : 'Invitation email successfully delivered to recipient inbox.';
 
     return successResponse(
       {
@@ -121,8 +128,13 @@ export async function POST(request, { params }) {
         token,
         inviteLink,
         expiresInDays: 7,
+        emailSent,
+        emailMessage,
+        messageId: emailResult?.id || null,
       },
-      'Invitation sent successfully',
+      emailSent
+        ? 'Invitation email sent successfully'
+        : 'Member invited. Please copy and share the direct invitation link.',
       200
     );
   } catch (error) {

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Calendar, ExternalLink, Settings, Plus } from 'lucide-react';
+import { Search, Filter, Calendar, ExternalLink, Settings, Plus, Vote } from 'lucide-react';
 
-export default function ElectionTable({ elections = [], orgId }) {
+export default function ElectionTable({ elections = [], orgId, canManage = true }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -60,7 +60,9 @@ export default function ElectionTable({ elections = [], orgId }) {
         <div>
           <h3 className="text-xl font-bold text-white tracking-tight">Elections</h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            Manage your organization&apos;s active, scheduled, and past election ballots.
+            {canManage
+              ? "Manage your organization's active, scheduled, and past election ballots."
+              : "View your organization's active, scheduled, and past election ballots."}
           </p>
         </div>
 
@@ -111,6 +113,21 @@ export default function ElectionTable({ elections = [], orgId }) {
           <tbody className="divide-y divide-slate-800/60 text-sm">
             {filteredElections.map((elec) => {
               const stats = elec.stats || {};
+              const positionCount =
+                stats.positionCount ??
+                stats.positionsCount ??
+                (elec.positions ? elec.positions.length : 0);
+              const candidateCount =
+                stats.candidateCount ??
+                stats.candidatesCount ??
+                (elec.positions
+                  ? elec.positions.reduce((acc, p) => acc + (p.candidates ? p.candidates.length : 0), 0)
+                  : 0);
+              const eligibleVoterCount =
+                stats.eligibleVoterCount ??
+                stats.totalEligible ??
+                0;
+
               const startDate = elec.startDate
                 ? new Date(elec.startDate).toLocaleDateString(undefined, {
                     month: 'short',
@@ -152,11 +169,11 @@ export default function ElectionTable({ elections = [], orgId }) {
                   </td>
                   <td className="py-4 px-4 whitespace-nowrap text-xs text-slate-400">
                     <div>
-                      {stats.positionCount || 0} Positions •{' '}
-                      {stats.candidateCount || 0} Candidates
+                      {positionCount} {positionCount === 1 ? 'Position' : 'Positions'} •{' '}
+                      {candidateCount} {candidateCount === 1 ? 'Candidate' : 'Candidates'}
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      {stats.eligibleVoterCount || 0} Eligible Electors
+                      {eligibleVoterCount} {eligibleVoterCount === 1 ? 'Eligible Elector' : 'Eligible Electors'}
                     </div>
                   </td>
                   <td className="py-4 pr-2 text-right whitespace-nowrap">
@@ -169,13 +186,25 @@ export default function ElectionTable({ elections = [], orgId }) {
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Link>
-                      <Link
-                        href={`/org/${orgId}/elections/${elec.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white font-bold text-xs transition-all border border-blue-500/20"
-                      >
-                        <Settings className="h-3.5 w-3.5" />
-                        <span>Manage</span>
-                      </Link>
+                      {canManage ? (
+                        <Link
+                          href={`/org/${orgId}/elections/${elec.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white font-bold text-xs transition-all border border-blue-500/20"
+                        >
+                          <Settings className="h-3.5 w-3.5" />
+                          <span>Manage</span>
+                        </Link>
+                      ) : (
+                        elec.status === 'live' && (
+                          <Link
+                            href={`/e/${elec.id}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md shadow-blue-500/20"
+                          >
+                            <Vote className="h-3.5 w-3.5" />
+                            <span>Vote</span>
+                          </Link>
+                        )
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -187,12 +216,14 @@ export default function ElectionTable({ elections = [], orgId }) {
         {filteredElections.length === 0 && (
           <div className="text-center py-12 text-slate-500">
             <p className="text-sm">No elections found matching the criteria.</p>
-            <Link
-              href={`/org/${orgId}/elections/new`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 mt-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all"
-            >
-              <Plus className="h-3.5 w-3.5" /> Create Your First Election
-            </Link>
+            {canManage && (
+              <Link
+                href={`/org/${orgId}/elections/new`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 mt-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-all"
+              >
+                <Plus className="h-3.5 w-3.5" /> Create Your First Election
+              </Link>
+            )}
           </div>
         )}
       </div>

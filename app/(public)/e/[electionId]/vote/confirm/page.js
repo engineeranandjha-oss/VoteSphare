@@ -13,6 +13,7 @@ import {
   Lock,
   RefreshCw,
 } from 'lucide-react';
+import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
 export default function VoteConfirmPage({ params }) {
   const { electionId } = params;
@@ -110,6 +111,7 @@ export default function VoteConfirmPage({ params }) {
   async function handleConfirmVote() {
     try {
       setSubmitting(true);
+      startGlobalProgress();
       setError(null);
 
       if (typeof window === 'undefined') return;
@@ -161,6 +163,7 @@ export default function VoteConfirmPage({ params }) {
       setError(err.message || 'Failed to cast ballot');
     } finally {
       setSubmitting(false);
+      completeGlobalProgress();
     }
   }
 
@@ -296,12 +299,13 @@ export default function VoteConfirmPage({ params }) {
             type="button"
             onClick={handleConfirmVote}
             disabled={submitting || sessionExpired || !previewData?.valid}
+            aria-busy={submitting}
             className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2.5 cursor-pointer"
           >
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Sealing Anonymous Ballot...</span>
+                <span>Submitting Vote & Sealing Ballot...</span>
               </>
             ) : (
               <>

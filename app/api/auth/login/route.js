@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
  */
 export async function GET(request) {
   const requestUrl = new URL(request.url);
-  const next = requestUrl.searchParams.get('next') || '/';
+  const next = requestUrl.searchParams.get('next') || requestUrl.searchParams.get('redirect') || '/dashboard';
   const supabase = createClient();
 
   const callbackUrl = `${requestUrl.origin}/api/auth/callback?next=${encodeURIComponent(next)}`;
@@ -25,7 +25,7 @@ export async function GET(request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${requestUrl.origin}/login?error=${encodeURIComponent(error.message)}`
+      `${requestUrl.origin}/auth/login?error=${encodeURIComponent(error.message)}`
     );
   }
 
@@ -33,5 +33,5 @@ export async function GET(request) {
     return NextResponse.redirect(data.url);
   }
 
-  return NextResponse.redirect(`${requestUrl.origin}/login`);
+  return NextResponse.redirect(`${requestUrl.origin}/auth/login`);
 }

@@ -14,10 +14,10 @@ import {
   Building2,
   LogIn,
   LayoutDashboard,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import UserAvatarMenu from '@/components/auth/UserAvatarMenu';
-
 import Logo from '@/components/common/Logo';
 
 export default function PublicNavbar() {
@@ -26,6 +26,7 @@ export default function PublicNavbar() {
   const { authenticated, loading } = useAuth();
 
   const navLinks = [
+    { label: 'Pricing', href: '/pricing', icon: Sparkles, featured: true },
     { label: 'Join an Election', href: '/join', icon: Vote },
     { label: 'For Organizations', href: '/organizations', icon: Building2 },
     { label: 'How It Works', href: '/how-it-works', icon: CheckCircle2 },
@@ -39,34 +40,35 @@ export default function PublicNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl transition-colors">
       <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <Logo size={36} className="transition-transform group-hover:scale-105" />
+        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+          <Logo size={36} className="transition-transform group-hover:scale-105 shrink-0" />
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black tracking-tight text-white">
-              Vote<span className="text-blue-400">Sphere</span>
+            <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+              Vote<span className="text-blue-600 dark:text-blue-400">Sphere</span>
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-300">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {navLinks.map((item) => {
-            const Icon = item.icon;
             const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-1.5 transition-colors py-1.5 px-2 rounded-lg ${
+                className={`whitespace-nowrap px-3 py-1.5 text-xs xl:text-sm font-medium rounded-xl transition-all duration-150 flex items-center gap-1.5 ${
                   active
-                    ? 'text-white bg-slate-900 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 font-semibold shadow-xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/60'
                 }`}
               >
-                <Icon className="h-4 w-4 text-blue-400 shrink-0" />
+                {item.featured && (
+                  <Sparkles className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
+                )}
                 <span>{item.label}</span>
               </Link>
             );
@@ -74,16 +76,16 @@ export default function PublicNavbar() {
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5 sm:gap-3 shrink-0">
           {loading ? (
-            <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-800/60" />
+            <div className="h-9 w-28 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800/60" />
           ) : authenticated ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-slate-900 border border-slate-700/80 hover:bg-slate-800 hover:border-slate-600 rounded-xl shadow-sm transition-all"
+                className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl shadow-xs transition-all whitespace-nowrap"
               >
-                <LayoutDashboard className="h-3.5 w-3.5 text-blue-400" />
+                <LayoutDashboard className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                 <span>Dashboard</span>
               </Link>
               <UserAvatarMenu />
@@ -92,17 +94,17 @@ export default function PublicNavbar() {
             <>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-900 rounded-xl transition-all"
+                className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 rounded-xl transition-all whitespace-nowrap"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Sign In</span>
               </Link>
               <Link
                 href="/onboarding/organization"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-500/25 transition-all"
+                className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-10 px-3.5 sm:px-4 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all whitespace-nowrap"
               >
                 <span>Create an Election</span>
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </>
           )}
@@ -114,7 +116,7 @@ export default function PublicNavbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
           >
@@ -125,7 +127,7 @@ export default function PublicNavbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-slate-800 bg-slate-950/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-4 animate-in slide-in-from-top-2 duration-200 shadow-xl">
           <nav className="flex flex-col space-y-1">
             {navLinks.map((item) => {
               const Icon = item.icon;
@@ -135,25 +137,25 @@ export default function PublicNavbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                     active
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/60'
                   }`}
                 >
-                  <Icon className="h-4 w-4 text-blue-400" />
+                  <Icon className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">
             {authenticated ? (
               <Link
                 href="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-2.5 text-center text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md flex items-center justify-center gap-2"
+                className="w-full h-11 text-center text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md flex items-center justify-center gap-2"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 <span>Go to Dashboard</span>
@@ -163,7 +165,7 @@ export default function PublicNavbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-2.5 text-center text-sm font-semibold text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center gap-2"
+                  className="w-full h-11 text-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center gap-2 transition-colors"
                 >
                   <LogIn className="h-4 w-4" />
                   <span>Sign In</span>
@@ -171,7 +173,7 @@ export default function PublicNavbar() {
                 <Link
                   href="/onboarding/organization"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-3 text-center text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+                  className="w-full h-11 text-center text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
                 >
                   <span>Create an Election</span>
                   <ArrowRight className="h-4 w-4" />

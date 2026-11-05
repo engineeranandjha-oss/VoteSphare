@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+import crypto from 'crypto';
 
 export default function defineUser(sequelize) {
   const User = sequelize.define(
@@ -6,7 +7,7 @@ export default function defineUser(sequelize) {
     {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: () => crypto.randomUUID(),
         primaryKey: true,
       },
       supabaseUserId: {
@@ -27,7 +28,7 @@ export default function defineUser(sequelize) {
         },
       },
       image: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT('long'),
         allowNull: true,
       },
     },

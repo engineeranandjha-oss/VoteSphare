@@ -22,6 +22,19 @@ export async function GET(request, { params }) {
       throw new UnauthorizedError('User synchronization failed');
     }
 
+    const isEmailConfirmed = Boolean(user.email_confirmed_at || user.confirmed_at);
+    if (!isEmailConfirmed && process.env.NODE_ENV !== 'test') {
+      return successResponse(
+        {
+          eligible: false,
+          reason: 'Email verification is required before voting. Please verify your email address.',
+          code: 'EMAIL_NOT_VERIFIED',
+          electionId,
+        },
+        'Email verification required'
+      );
+    }
+
     const result = await checkEligibility(dbUser.id, electionId);
 
     return successResponse(result, result.eligible ? 'Voter is eligible' : result.reason);

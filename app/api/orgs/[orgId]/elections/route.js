@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/error-handler';
 import { Organization, Election, Position, Eligibility, Candidate } from '@/models/index.js';
 import { electionCreateSchema } from '@/lib/validations';
+import { assertCanCreateElection, recordUsage } from '@/lib/billing/entitlements';
 import { Op } from 'sequelize';
 
 /**
@@ -162,6 +163,9 @@ export async function POST(request, { params }) {
     // Require Owner or Admin role
     await requireOrgRole(dbUser.id, organization.id, ['owner', 'admin']);
 
+    // Enforce subscription plan monthly election quota
+    await assertCanCreateElection(organization.id);
+
     const body = await request.json();
     const validatedData = electionCreateSchema.parse(body);
 
@@ -181,6 +185,14 @@ export async function POST(request, { params }) {
       config: validatedData.config || {},
       status: 'draft',
       createdBy: dbUser.id,
+    });
+
+    // Record usage telemetry
+    recordUsage({
+      orgId: organization.id,
+      usageType: 'election_created',
+      quantity: 1,
+      electionId: election.id,
     });
 
     return successResponse(election, 'Election created successfully', 201);

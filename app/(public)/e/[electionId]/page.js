@@ -139,7 +139,13 @@ export default function PublicElectionPage({ params }) {
 
         {/* Footer */}
         <div className="pt-8 pb-4 text-center border-t border-slate-900 text-xs text-slate-500">
-          Powered by <strong>VoteSphere</strong> — Verifiable Anonymous Voting Architecture
+          {election?.customBranding && election?.config?.customFooter ? (
+            <span>{election.config.customFooter}</span>
+          ) : (
+            <>
+              Powered by <strong>VoteSphere</strong> — Verifiable Anonymous Voting Architecture
+            </>
+          )}
         </div>
       </main>
     </div>

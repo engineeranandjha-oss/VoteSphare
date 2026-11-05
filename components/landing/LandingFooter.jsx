@@ -21,7 +21,7 @@ export default function LandingFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-800/80 bg-slate-950 text-slate-400 py-16 px-4 sm:px-6 lg:px-8">
+    <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 py-16 px-4 sm:px-6 lg:px-8 transition-colors">
       <div className="max-w-7xl mx-auto">
         {/* Main 4-Column Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
@@ -30,22 +30,22 @@ export default function LandingFooter() {
           <div className="space-y-4">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
               <Logo size={36} className="group-hover:scale-105 transition-transform duration-200" />
-              <span className="text-xl font-black tracking-tight text-white">
-                Vote<span className="text-blue-400">Sphere</span>
+              <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                Vote<span className="text-blue-600 dark:text-blue-400">Sphere</span>
               </span>
             </Link>
 
-            <p className="text-sm text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               The modern, cryptographically verifiable online election platform built for organizations, academies, and communities.
             </p>
 
             <div className="pt-1 space-y-2">
-              <div className="flex items-start gap-2 text-xs text-slate-400">
-                <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Lock className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
                 <span>Zero-knowledge ballot secrecy with permanent voter dissociation.</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-emerald-400/90 font-medium">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400/90 font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
                 <span>SHA-256 verifiable ballot receipt ledger</span>
               </div>
             </div>
@@ -53,15 +53,23 @@ export default function LandingFooter() {
 
           {/* Column 2 — Platform */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-              <Vote className="h-3.5 w-3.5 text-blue-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Vote className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
               Platform
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
+                  href="/pricing"
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline transition-colors duration-150 flex items-center gap-1.5"
+                >
+                  Pricing & Plans
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/how-it-works"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   How It Works
                 </Link>
@@ -69,7 +77,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/join"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Join an Election
                 </Link>
@@ -77,7 +85,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/onboarding/organization"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Create an Election
                 </Link>
@@ -85,7 +93,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/organizations"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   For Organizations
                 </Link>
@@ -93,7 +101,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/security"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Security & Privacy
                 </Link>
@@ -103,62 +111,62 @@ export default function LandingFooter() {
 
           {/* Column 3 — Solutions */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-indigo-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
               Solutions
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
                   href="/organizations/schools"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <GraduationCap className="h-3.5 w-3.5 text-slate-500" />
+                  <GraduationCap className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Schools & Colleges
                 </Link>
               </li>
               <li>
                 <Link
                   href="/organizations/universities"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                  <Building2 className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Universities & Colleges
                 </Link>
               </li>
               <li>
                 <Link
                   href="/organizations/companies"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <Briefcase className="h-3.5 w-3.5 text-slate-500" />
+                  <Briefcase className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Companies & Teams
                 </Link>
               </li>
               <li>
                 <Link
                   href="/organizations/societies"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <Home className="h-3.5 w-3.5 text-slate-500" />
+                  <Home className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Residential Societies
                 </Link>
               </li>
               <li>
                 <Link
                   href="/organizations/ngos"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <HeartHandshake className="h-3.5 w-3.5 text-slate-500" />
+                  <HeartHandshake className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   NGOs & Non-Profits
                 </Link>
               </li>
               <li>
                 <Link
                   href="/organizations/families"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
-                  <Users className="h-3.5 w-3.5 text-slate-500" />
+                  <Users className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Families & Groups
                 </Link>
               </li>
@@ -167,15 +175,15 @@ export default function LandingFooter() {
 
           {/* Column 4 — Support & Contact */}
           <div className="space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
-              <HelpCircle className="h-3.5 w-3.5 text-cyan-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+              <HelpCircle className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" />
               Support & Contact
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
                   href="/help"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Help Center
                 </Link>
@@ -183,7 +191,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/contact"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Contact Support
                 </Link>
@@ -191,7 +199,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/contact?category=Bug+report"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   Report an Issue
                 </Link>
@@ -199,7 +207,7 @@ export default function LandingFooter() {
               <li>
                 <Link
                   href="/help#faq"
-                  className="hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                  className="hover:text-slate-900 dark:hover:text-white transition-colors duration-150 flex items-center gap-1.5"
                 >
                   FAQs
                 </Link>
@@ -222,19 +230,19 @@ export default function LandingFooter() {
         </div>
 
         {/* Bottom Bar: Copyright & Legal */}
-        <div className="mt-12 pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {currentYear} VoteSphere. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link
               href="/privacy"
-              className="text-slate-400 hover:text-white transition-colors duration-150"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-150"
             >
               Privacy Policy
             </Link>
-            <span className="text-slate-700">|</span>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
             <Link
               href="/terms"
-              className="text-slate-400 hover:text-white transition-colors duration-150"
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors duration-150"
             >
               Terms of Service
             </Link>

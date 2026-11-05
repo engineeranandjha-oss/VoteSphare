@@ -29,6 +29,12 @@ export async function GET() {
           email: user.email,
           userMetadata: user.user_metadata,
           appMetadata: user.app_metadata,
+          image:
+            dbUser?.image ||
+            user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            user.user_metadata?.avatar ||
+            null,
         },
         dbUser: dbUser
           ? {

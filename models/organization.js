@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize';
+import crypto from 'crypto';
 
 export default function defineOrganization(sequelize) {
   const Organization = sequelize.define(
@@ -6,7 +7,7 @@ export default function defineOrganization(sequelize) {
     {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: () => crypto.randomUUID(),
         primaryKey: true,
       },
       name: {
@@ -22,12 +23,16 @@ export default function defineOrganization(sequelize) {
         },
       },
       type: {
-        type: DataTypes.ENUM('school', 'university', 'company', 'society', 'ngo', 'family', 'other'),
+        type: DataTypes.STRING(50),
         defaultValue: 'other',
         allowNull: false,
       },
       description: {
         type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      logo: {
+        type: DataTypes.TEXT('long'),
         allowNull: true,
       },
       ownerId: {

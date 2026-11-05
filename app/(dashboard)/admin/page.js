@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Vote, Building2, Plus, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, Plus, ArrowRight, Loader2, TrendingUp } from 'lucide-react';
+import Logo from '@/components/common/Logo';
 
 export default function AdminGatewayPage() {
   const router = useRouter();
@@ -18,17 +19,7 @@ export default function AdminGatewayPage() {
         const list = json.data?.organizations || json.data || [];
         setOrgs(list);
 
-        // If user has exactly one organization, redirect directly to its dashboard
-        if (list.length === 1) {
-          router.replace(`/org/${list[0].id}/dashboard`);
-          return;
-        }
-
-        // If user has no organizations, redirect to onboarding
-        if (list.length === 0) {
-          router.replace('/onboarding');
-          return;
-        }
+        // Allow user to select organization or create a new one without auto-redirecting
       } catch {
         // Fallback: stay on gateway
       } finally {
@@ -54,8 +45,8 @@ export default function AdminGatewayPage() {
     <main className="min-h-screen bg-slate-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <div className="max-w-2xl w-full space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-xl shadow-blue-500/25 mb-3">
-            <Vote className="h-6 w-6" />
+          <div className="mb-3 flex justify-center">
+            <Logo size={48} className="shadow-xl shadow-blue-500/25" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
             Select Your Workspace
@@ -66,6 +57,26 @@ export default function AdminGatewayPage() {
         </div>
 
         <div className="space-y-3">
+          <Link
+            href="/admin/billing"
+            className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-500/30 hover:border-blue-400 transition-all group shadow-lg"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
+                  Revenue & Billing Analytics
+                </div>
+                <div className="text-xs text-slate-400">
+                  Platform MRR, ARR, active subscriptions, and financial ledger
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
           {orgs.map((org) => (
             <Link
               key={org.id}

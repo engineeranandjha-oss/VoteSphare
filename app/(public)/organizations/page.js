@@ -25,7 +25,7 @@ const orgTypes = [
     title: 'Schools & Academies',
     subtitle: 'Student Councils, Class Reps & Club Elections',
     description:
-      'Empower student leadership with simple, secure voting. Configure student rosters, candidate manifestos, and publish transparent results.',
+      'Student council elections, class representatives, school committees, and student organizations.',
     icon: School,
     color: 'from-blue-600 to-cyan-600',
     features: [
@@ -40,7 +40,7 @@ const orgTypes = [
     title: 'Universities & Colleges',
     subtitle: 'Student Unions, Faculty Senate & Campus Referendums',
     description:
-      'Manage high-volume campus elections across departments and student bodies with CSV roster imports and live turnout metrics.',
+      'Student elections, campus committees, academic organizations, and university governance.',
     icon: GraduationCap,
     color: 'from-indigo-600 to-blue-600',
     features: [
@@ -55,7 +55,7 @@ const orgTypes = [
     title: 'Companies & Teams',
     subtitle: 'Employee Committees, Board Elections & Strategic Votes',
     description:
-      'Conduct workplace voting with role-based access, department eligibility controls, and configurable privacy options.',
+      'Leadership elections, internal committees, employee voting, and organizational decisions.',
     icon: Building2,
     color: 'from-emerald-600 to-teal-600',
     features: [
@@ -70,7 +70,7 @@ const orgTypes = [
     title: 'Residential Societies & Communities',
     subtitle: 'Resident Welfare Associations (RWA) & Housing Societies',
     description:
-      'Conduct community elections and general body decisions with QR code voting, mobile-first ballots, and instant results.',
+      'Committee elections, RWA decisions, AGM resolutions, and community voting.',
     icon: Users,
     color: 'from-amber-600 to-orange-600',
     features: [
@@ -85,7 +85,7 @@ const orgTypes = [
     title: 'NGOs & Non-Profits',
     subtitle: 'Board Elections, Member Ballots & Association Governance',
     description:
-      'Run formal elections for non-profit governance, board members, and charter amendments with auditable records.',
+      'Board elections, member decisions, committees, and organizational resolutions.',
     icon: HeartHandshake,
     color: 'from-purple-600 to-pink-600',
     features: [
@@ -100,7 +100,7 @@ const orgTypes = [
     title: 'Families & Groups',
     subtitle: 'Trip Planning, Group Decisions & Family Polls',
     description:
-      'Make group decisions quickly with a simple shared link—no complex setup required.',
+      'Private group decisions, club elections, event voting, and community decisions.',
     icon: Home,
     color: 'from-rose-600 to-pink-600',
     features: [
@@ -122,13 +122,13 @@ export default function OrganizationsPage() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 mb-4">
             <Building2 className="h-3.5 w-3.5" />
-            <span>Built for Every Community</span>
+            <span>Tailored Solutions</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
-            Elections Tailored for Your Organization
+            Built for the Organizations That Run Elections
           </h1>
           <p className="mt-4 text-base sm:text-lg text-slate-400">
-            Whether you are managing a 10,000-student university election, a company committee, or a community poll, VoteSphere provides the right controls, privacy, and workflows.
+            Select your organization type to explore specialized features, eligibility workflows, and ballot templates.
           </p>
         </div>
 
@@ -184,9 +184,9 @@ export default function OrganizationsPage() {
         {/* CTA Banner */}
         <div className="rounded-3xl border border-slate-800 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900/60 p-10 sm:p-12 text-center shadow-2xl relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-4">
-            <h2 className="text-3xl font-black text-white">Ready to run your first election?</h2>
+            <h2 className="text-3xl font-black text-white">Ready to Run Your Next Election?</h2>
             <p className="text-sm text-slate-300">
-              Create an organization in minutes, configure positions and candidate manifestos, and invite your voters with ease.
+              Create your election, invite eligible voters, and manage the entire voting process from one platform.
             </p>
             <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
               <Link
