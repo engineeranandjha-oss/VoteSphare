@@ -31,6 +31,52 @@ export default function defineUser(sequelize) {
         type: DataTypes.TEXT('long'),
         allowNull: true,
       },
+      displayName: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      designation: {
+        type: DataTypes.STRING(150),
+        allowNull: true,
+      },
+      bio: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      phone: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
+      showEmailPublicly: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      showPhonePublicly: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      isProfilePublic: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+      },
+      avatarVisible: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+      },
+      notificationPreferences: {
+        type: DataTypes.JSON,
+        defaultValue: {
+          emailInvites: true,
+          turnoutUpdates: false,
+          resultsPublished: true,
+          billingUpdates: true,
+        },
+        allowNull: false,
+      },
     },
     {
       tableName: 'users',

@@ -35,6 +35,53 @@ export default function defineOrganization(sequelize) {
         type: DataTypes.TEXT('long'),
         allowNull: true,
       },
+      coverImage: {
+        type: DataTypes.TEXT('long'),
+        allowNull: true,
+      },
+      website: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      publicEmail: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      publicPhone: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
+      showPublicPhone: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      location: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      establishedDate: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+      },
+      isVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      memberDirectoryVisibility: {
+        type: DataTypes.ENUM('private', 'members_only', 'public'),
+        defaultValue: 'members_only',
+        allowNull: false,
+      },
+      signatoryName: {
+        type: DataTypes.STRING(150),
+        allowNull: true,
+      },
+      signatoryTitle: {
+        type: DataTypes.STRING(150),
+        allowNull: true,
+      },
       ownerId: {
         type: DataTypes.UUID,
         allowNull: false,

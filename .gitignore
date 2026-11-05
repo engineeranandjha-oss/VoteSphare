@@ -37,6 +37,7 @@ next-env.d.ts
 
 /doc
 /docs
+/tmp
 
 task.md
 secret.md

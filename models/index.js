@@ -14,6 +14,7 @@ import definePayment from './payment.js';
 import defineInvoice from './invoice.js';
 import defineUsageRecord from './usagerecord.js';
 import defineWebhookEvent from './webhookevent.js';
+import defineCertificate from './certificate.js';
 
 // Initialize Models
 const User = defineUser(sequelize);
@@ -31,6 +32,7 @@ const Payment = definePayment(sequelize);
 const Invoice = defineInvoice(sequelize);
 const UsageRecord = defineUsageRecord(sequelize);
 const WebhookEvent = defineWebhookEvent(sequelize);
+const Certificate = defineCertificate(sequelize);
 
 // User <-> Organization (Owner)
 User.hasMany(Organization, { foreignKey: 'ownerId', as: 'ownedOrganizations' });
@@ -132,6 +134,26 @@ UsageRecord.belongsTo(OrganizationSubscription, { foreignKey: 'subscriptionId', 
 Election.hasMany(UsageRecord, { foreignKey: 'electionId', as: 'usageRecords' });
 UsageRecord.belongsTo(Election, { foreignKey: 'electionId', as: 'election' });
 
+// ==========================================
+// Certificate Associations (Constitutional Anonymity Preserved)
+// ==========================================
+Organization.hasMany(Certificate, { foreignKey: 'orgId', as: 'certificates', onDelete: 'CASCADE' });
+Certificate.belongsTo(Organization, { foreignKey: 'orgId', as: 'organization' });
+
+Election.hasMany(Certificate, { foreignKey: 'electionId', as: 'certificates', onDelete: 'CASCADE' });
+Certificate.belongsTo(Election, { foreignKey: 'electionId', as: 'election' });
+
+Position.hasMany(Certificate, { foreignKey: 'positionId', as: 'certificates', onDelete: 'CASCADE' });
+Certificate.belongsTo(Position, { foreignKey: 'positionId', as: 'position' });
+
+Candidate.hasMany(Certificate, { foreignKey: 'candidateId', as: 'certificates', onDelete: 'CASCADE' });
+Certificate.belongsTo(Candidate, { foreignKey: 'candidateId', as: 'candidate' });
+
+User.hasMany(Certificate, { foreignKey: 'userId', as: 'certificates' });
+Certificate.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Certificate.belongsTo(User, { foreignKey: 'revokedBy', as: 'revoker' });
+
 const db = {
   sequelize,
   User,
@@ -149,6 +171,7 @@ const db = {
   Invoice,
   UsageRecord,
   WebhookEvent,
+  Certificate,
 };
 
 export default db;
@@ -169,4 +192,5 @@ export {
   Invoice,
   UsageRecord,
   WebhookEvent,
+  Certificate,
 };

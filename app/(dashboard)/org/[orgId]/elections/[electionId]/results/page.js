@@ -8,6 +8,7 @@ import ResultsPublishControl from '@/components/results/ResultsPublishControl';
 import ResultsExportBar from '@/components/results/ResultsExportBar';
 import QuorumBreakdownCard from '@/components/results/QuorumBreakdownCard';
 import RunoffModal from '@/components/results/RunoffModal';
+import ElectionCertificatesCard from '@/components/results/ElectionCertificatesCard';
 import {
   ArrowLeft,
   RefreshCw,
@@ -261,6 +262,13 @@ export default function AdminElectionResultsPage({ params }) {
             </div>
           </div>
         )}
+
+        {/* Official Certificates Registry */}
+        <ElectionCertificatesCard
+          electionId={electionId}
+          status={data.status}
+          orgId={orgId}
+        />
 
         {/* Export & Reporting Bar */}
         <ResultsExportBar data={data} />

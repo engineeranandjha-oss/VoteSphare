@@ -15,6 +15,22 @@ import { z } from 'zod';
 const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name must be at most 100 characters').trim().optional(),
   image: z.string().optional().nullable().or(z.literal('')),
+  displayName: z.string().max(100).optional().nullable(),
+  designation: z.string().max(150).optional().nullable(),
+  bio: z.string().max(1000).optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  showEmailPublicly: z.boolean().optional(),
+  showPhonePublicly: z.boolean().optional(),
+  isProfilePublic: z.boolean().optional(),
+  avatarVisible: z.boolean().optional(),
+  notificationPreferences: z
+    .object({
+      emailInvites: z.boolean().optional(),
+      turnoutUpdates: z.boolean().optional(),
+      resultsPublished: z.boolean().optional(),
+      billingUpdates: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -201,8 +217,22 @@ export async function GET(request) {
           id: dbUser.id,
           supabaseUserId: dbUser.supabaseUserId,
           name: dbUser.name,
+          displayName: dbUser.displayName || null,
+          designation: dbUser.designation || null,
+          bio: dbUser.bio || null,
           email: dbUser.email,
+          phone: dbUser.phone || null,
           image: dbUser.image,
+          showEmailPublicly: Boolean(dbUser.showEmailPublicly),
+          showPhonePublicly: Boolean(dbUser.showPhonePublicly),
+          isProfilePublic: dbUser.isProfilePublic !== false,
+          avatarVisible: dbUser.avatarVisible !== false,
+          notificationPreferences: dbUser.notificationPreferences || {
+            emailInvites: true,
+            turnoutUpdates: false,
+            resultsPublished: true,
+            billingUpdates: true,
+          },
           createdAt: dbUser.createdAt,
           updatedAt: dbUser.updatedAt,
         },
@@ -220,7 +250,7 @@ export async function GET(request) {
 
 /**
  * PATCH /api/user/profile
- * Updates user profile attributes (e.g. display name).
+ * Updates user profile attributes (display name, designation, bio, privacy flags, notification preferences).
  */
 export async function PATCH(request) {
   try {
@@ -244,10 +274,37 @@ export async function PATCH(request) {
       );
     }
 
-    const { name, image } = parseResult.data;
+    const {
+      name,
+      image,
+      displayName,
+      designation,
+      bio,
+      phone,
+      showEmailPublicly,
+      showPhonePublicly,
+      isProfilePublic,
+      avatarVisible,
+      notificationPreferences,
+    } = parseResult.data;
+
     const updateData = {};
     if (name !== undefined) updateData.name = name;
     if (image !== undefined) updateData.image = image || null;
+    if (displayName !== undefined) updateData.displayName = displayName || null;
+    if (designation !== undefined) updateData.designation = designation || null;
+    if (bio !== undefined) updateData.bio = bio || null;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (showEmailPublicly !== undefined) updateData.showEmailPublicly = showEmailPublicly;
+    if (showPhonePublicly !== undefined) updateData.showPhonePublicly = showPhonePublicly;
+    if (isProfilePublic !== undefined) updateData.isProfilePublic = isProfilePublic;
+    if (avatarVisible !== undefined) updateData.avatarVisible = avatarVisible;
+    if (notificationPreferences !== undefined) {
+      updateData.notificationPreferences = {
+        ...(dbUser.notificationPreferences || {}),
+        ...notificationPreferences,
+      };
+    }
 
     await dbUser.update(updateData);
 
@@ -256,8 +313,17 @@ export async function PATCH(request) {
         id: dbUser.id,
         supabaseUserId: dbUser.supabaseUserId,
         name: dbUser.name,
+        displayName: dbUser.displayName,
+        designation: dbUser.designation,
+        bio: dbUser.bio,
         email: dbUser.email,
+        phone: dbUser.phone,
         image: dbUser.image,
+        showEmailPublicly: dbUser.showEmailPublicly,
+        showPhonePublicly: dbUser.showPhonePublicly,
+        isProfilePublic: dbUser.isProfilePublic,
+        avatarVisible: dbUser.avatarVisible,
+        notificationPreferences: dbUser.notificationPreferences,
         updatedAt: dbUser.updatedAt,
       },
       'Profile updated successfully'

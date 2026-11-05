@@ -1,15 +1,17 @@
 import { requireAuth, getCurrentDbUser } from '@/lib/auth/session';
 import { syncUser } from '@/lib/auth/user-sync';
-import { requireOrgRole } from '@/lib/auth/authorization';
+import { requireOrgRole, getUserRole } from '@/lib/auth/authorization';
 import { successResponse, paginatedResponse } from '@/lib/utils/response';
 import {
   handleApiError,
   NotFoundError,
   ConflictError,
   UnauthorizedError,
+  ForbiddenError,
   ValidationError,
 } from '@/lib/utils/error-handler';
-import { Organization, Member, User } from '@/models/index.js';
+import { Organization, Member, User, Election, Eligibility } from '@/models/index.js';
+import { Op } from 'sequelize';
 import { z } from 'zod';
 
 const addMemberSchema = z.object({
@@ -21,21 +23,11 @@ const addMemberSchema = z.object({
 
 /**
  * GET /api/orgs/[orgId]/members
- * List members of an organization with pagination and optional filtering.
+ * List members of an organization with search, filtering, sorting, and privacy controls.
  */
 export async function GET(request, { params }) {
   try {
     const { orgId } = params;
-    const user = await requireAuth();
-    let dbUser = await getCurrentDbUser();
-
-    if (!dbUser) {
-      dbUser = await syncUser(user);
-    }
-
-    if (!dbUser) {
-      throw new UnauthorizedError('User profile synchronization failed');
-    }
 
     // Resolve organization by UUID or slug
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId);
@@ -47,14 +39,69 @@ export async function GET(request, { params }) {
       throw new NotFoundError('Organization not found');
     }
 
-    // Require caller to be at least a member or owner
-    await requireOrgRole(dbUser.id, organization.id, ['owner', 'admin', 'voter']);
+    // Determine caller identity & role
+    let callerUser = null;
+    let callerRole = null;
+    try {
+      const user = await requireAuth();
+      callerUser = await getCurrentDbUser();
+      if (!callerUser && user) {
+        callerUser = await syncUser(user);
+      }
+      if (callerUser) {
+        callerRole = await getUserRole(organization.id, callerUser.id);
+
+        // Check if user is an eligible voter in this organization's elections
+        if (!callerRole) {
+          const orgElections = await Election.findAll({
+            where: { orgId: organization.id },
+            attributes: ['id'],
+            raw: true,
+          });
+          const electionIds = orgElections.map((e) => e.id);
+          if (electionIds.length > 0) {
+            const hasEligibility = await Eligibility.findOne({
+              where: { electionId: { [Op.in]: electionIds } },
+              include: [
+                {
+                  model: Member,
+                  as: 'member',
+                  where: { userId: callerUser.id },
+                  attributes: ['id'],
+                },
+              ],
+              attributes: ['id'],
+            });
+            if (hasEligibility) {
+              callerRole = 'voter';
+            }
+          }
+        }
+      }
+    } catch {
+      // Unauthenticated visitor
+    }
+
+    const isMember = callerRole === 'owner' || callerRole === 'admin' || callerRole === 'voter';
+    const isAdmin = callerRole === 'owner' || callerRole === 'admin';
+    const isPublicDirectory = organization.memberDirectoryVisibility === 'public';
+
+    // Privacy Gate: If not public and caller is not a member or voter, access is forbidden
+    if (!isMember && !isPublicDirectory) {
+      if (!callerUser) {
+        throw new UnauthorizedError('Authentication required to access member directory');
+      }
+      throw new ForbiddenError('You do not have permission to view this organization’s member directory');
+    }
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const search = searchParams.get('search')?.trim().toLowerCase() || '';
     const roleFilter = searchParams.get('role');
-    const statusFilter = searchParams.get('status') || 'active';
+    const statusFilter = searchParams.get('status') || (isAdmin ? 'all' : 'active');
+    const sortBy = searchParams.get('sortBy') || 'joinedAt'; // 'name', 'joinedAt', 'role'
+    const sortOrder = searchParams.get('sortOrder')?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     const whereClause = {
       orgId: organization.id,
@@ -64,31 +111,92 @@ export async function GET(request, { params }) {
       whereClause.role = roleFilter;
     }
 
-    if (statusFilter && ['active', 'pending', 'suspended', 'all'].includes(statusFilter)) {
+    // Non-admins can strictly only view active members
+    if (!isAdmin) {
+      whereClause.status = 'active';
+    } else if (statusFilter && ['active', 'pending', 'suspended', 'all'].includes(statusFilter)) {
       if (statusFilter !== 'all') {
         whereClause.status = statusFilter;
       }
     }
 
-    const { count, rows: members } = await Member.findAndCountAll({
+    // User search condition
+    const userWhereClause = {};
+    if (search) {
+      const searchConditions = [
+        { name: { [Op.like]: `%${search}%` } },
+        { displayName: { [Op.like]: `%${search}%` } },
+      ];
+      if (isAdmin) {
+        searchConditions.push({ email: { [Op.like]: `%${search}%` } });
+      }
+      userWhereClause[Op.or] = searchConditions;
+    }
+
+    // Determine sorting
+    let orderClause = [['createdAt', 'DESC']];
+    if (sortBy === 'name') {
+      orderClause = [[{ model: User, as: 'user' }, 'name', sortOrder]];
+    } else if (sortBy === 'role') {
+      orderClause = [['role', sortOrder], ['createdAt', 'ASC']];
+    } else {
+      orderClause = [['createdAt', sortOrder]];
+    }
+
+    const { count, rows: rawMembers } = await Member.findAndCountAll({
       where: whereClause,
       include: [
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'name', 'email', 'image'],
+          where: Object.keys(userWhereClause).length > 0 ? userWhereClause : undefined,
+          attributes: [
+            'id',
+            'name',
+            'displayName',
+            'email',
+            'phone',
+            'image',
+            'designation',
+            'bio',
+            'showEmailPublicly',
+            'showPhonePublicly',
+            'avatarVisible',
+          ],
         },
       ],
-      order: [
-        ['role', 'ASC'], // 'admin' / 'owner' / 'voter'
-        ['createdAt', 'ASC'],
-      ],
+      order: orderClause,
       offset: (page - 1) * limit,
       limit,
     });
 
+    // Serialize member items with privacy sanitization
+    const sanitizedMembers = rawMembers.map((m) => {
+      const u = m.user;
+      const isSelf = callerUser && callerUser.id === m.userId;
+
+      return {
+        id: m.id,
+        orgId: m.orgId,
+        userId: m.userId,
+        role: m.role,
+        status: m.status,
+        joinedAt: m.joinedAt || m.createdAt,
+        user: {
+          id: u?.id,
+          name: u?.name || 'Member',
+          displayName: u?.displayName || u?.name || 'Member',
+          designation: u?.designation || null,
+          bio: u?.bio || null,
+          image: u?.avatarVisible !== false ? u?.image : null,
+          email: isAdmin || isSelf || u?.showEmailPublicly ? u?.email : null,
+          phone: isAdmin || isSelf || u?.showPhonePublicly ? u?.phone : null,
+        },
+      };
+    });
+
     return paginatedResponse(
-      members,
+      sanitizedMembers,
       {
         total: count,
         page,

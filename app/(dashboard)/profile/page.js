@@ -1,128 +1,57 @@
 'use client';
 
-import { useState, useEffect, Suspense, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Vote,
   User,
-  Shield,
   Building2,
+  Sparkles,
+  Award,
+  Shield,
   Key,
   Copy,
   Check,
-  Save,
+  ArrowRight,
   Loader2,
   Calendar,
-  Sparkles,
-  ArrowLeft,
-  Lock,
-  ChevronRight,
-  Bell,
   CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import UserAvatarMenu from '@/components/auth/UserAvatarMenu';
-import ImageUpload from '@/components/common/ImageUpload';
-import CurrentPlanCard from '@/components/profile/CurrentPlanCard';
-import { startGlobalProgress, completeGlobalProgress } from '@/components/common/GlobalProgressProvider';
 
-function ProfileContent() {
-  const router = useRouter();
-  const { authenticated, loading: authLoading, user, dbUser, refresh: refreshAuth } = useAuth();
+export default function ProfileOverviewPage() {
+  const { user, dbUser } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [certificatesCount, setCertificatesCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [userImage, setUserImage] = useState('');
-  const [avatarLoadError, setAvatarLoadError] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [copiedFingerprint, setCopiedFingerprint] = useState(false);
-  const [selectedOrgId, setSelectedOrgId] = useState(null);
-  const [error, setError] = useState(null);
-
-  // Preference switches (state only for UX demonstration)
-  const [notifications, setNotifications] = useState({
-    emailInvites: true,
-    turnoutUpdates: false,
-    resultsPublished: true,
-  });
-
-  const fetchProfile = useCallback(async (orgId = null) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const url = orgId ? `/api/user/profile?orgId=${encodeURIComponent(orgId)}` : '/api/user/profile';
-      const res = await fetch(url);
-      if (res.ok) {
-        const json = await res.json();
-        setProfile(json.data);
-        setName(json.data?.user?.name || '');
-        setUserImage(json.data?.user?.image || '');
-        if (!orgId && json.data?.currentSubscription?.organization?.id) {
-          setSelectedOrgId(json.data.currentSubscription.organization.id);
-        }
-      } else {
-        throw new Error('Failed to load profile details');
-      }
-    } catch (err) {
-      setError(err.message || 'Error loading profile');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleSelectOrg = (newOrgId) => {
-    setSelectedOrgId(newOrgId);
-    fetchProfile(newOrgId);
-  };
 
   useEffect(() => {
-    if (!authLoading && !authenticated) {
-      router.replace('/auth/login?next=/profile');
-      return;
-    }
+    const fetchOverviewData = async () => {
+      try {
+        setLoading(true);
+        const [profileRes, certsRes] = await Promise.all([
+          fetch('/api/user/profile'),
+          fetch('/api/user/certificates'),
+        ]);
 
-    if (authenticated) {
-      fetchProfile();
-    }
-  }, [authenticated, authLoading, router, fetchProfile]);
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json();
+          setProfile(profileJson.data);
+        }
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    try {
-      setSavingProfile(true);
-      startGlobalProgress();
-      setSaveSuccess(false);
-      setError(null);
-
-      const res = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          image: userImage || null,
-        }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.message || 'Failed to update profile');
+        if (certsRes.ok) {
+          const certsJson = await certsRes.json();
+          setCertificatesCount(certsJson.data?.total || 0);
+        }
+      } catch (err) {
+        // Fallback gracefully
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setSaveSuccess(true);
-      await refreshAuth();
-      fetchProfile();
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      setError(err.message || 'Error saving profile');
-    } finally {
-      setSavingProfile(false);
-      completeGlobalProgress();
-    }
-  };
+    fetchOverviewData();
+  }, []);
 
   const handleCopyFingerprint = () => {
     if (profile?.cryptographicFingerprint) {
@@ -134,380 +63,252 @@ function ProfileContent() {
 
   const userObj = profile?.user || dbUser || {};
   const memberships = profile?.memberships || [];
-  const fingerprint = profile?.cryptographicFingerprint || 'Generating...';
+  const orgCount = profile?.userOrganizations?.length || memberships.length || 0;
+  const currentSub = profile?.currentSubscription;
 
-  const displayName = userObj.name || dbUser?.name || user?.userMetadata?.full_name || 'User';
+  const displayName = userObj.displayName || userObj.name || user?.userMetadata?.full_name || 'Member';
+  const designation = userObj.designation || 'Voter & Organization Member';
+  const email = userObj.email || user?.email || '';
 
   const initials = displayName
-    ? displayName
-        .split(' ')
-        .map((p) => p[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'U';
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
-  const displayImage =
-    userImage ||
-    userObj.image ||
-    profile?.user?.image ||
-    dbUser?.image ||
-    user?.image ||
-    user?.userMetadata?.avatar_url ||
-    user?.userMetadata?.picture ||
-    user?.user_metadata?.avatar_url ||
-    user?.user_metadata?.picture ||
-    null;
-
-  useEffect(() => {
-    setAvatarLoadError(false);
-  }, [displayImage]);
-
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-100">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="mt-3 text-sm font-semibold text-slate-400">Loading your profile...</p>
+      <div className="p-12 text-center rounded-3xl bg-slate-900/80 border border-slate-800">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3" />
+        <p className="text-xs text-slate-400">Loading profile workspace overview...</p>
       </div>
     );
   }
 
-  const formattedDate = userObj.createdAt
-    ? new Date(userObj.createdAt).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : 'Recently';
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-500 selection:text-white">
-      {/* Top Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div className="space-y-6">
+      {/* Hero Welcome Card */}
+      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-950/40 border border-slate-800/80 p-6 sm:p-8 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/voter"
-              className="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors"
-            >
-              <Vote className="h-4 w-4 text-emerald-400" />
-              <span>Voter Hub</span>
-            </Link>
-            <UserAvatarMenu />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        {/* Profile Header Card */}
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl" />
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
-            <div className="flex items-center gap-5">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-2xl font-black text-white shadow-xl shadow-blue-500/20 border border-blue-400/30 overflow-hidden shrink-0">
-                {displayImage && !avatarLoadError ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={displayImage}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                    onError={() => setAvatarLoadError(true)}
-                  />
-                ) : (
-                  initials
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-black text-white">{displayName}</h1>
-                  <span className="flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/20">
-                    <Shield className="h-3 w-3" />
-                    Verified Identity
-                  </span>
-                </div>
-                <p className="text-sm text-slate-400 mt-0.5">{userObj.email || user?.email}</p>
-                <div className="mt-2 flex items-center gap-4 text-xs text-slate-500 font-medium">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    Member since {formattedDate}
-                  </span>
-                  <span>•</span>
-                  <span>{memberships.length} Workspace{memberships.length === 1 ? '' : 's'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-xs font-medium text-destructive">
-            {error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left 2 Columns: Settings & Cryptographic ID */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Workspace Plan & Commercial Subscription */}
-            <CurrentPlanCard
-              currentSubscription={profile?.currentSubscription}
-              userOrganizations={profile?.userOrganizations || []}
-              selectedOrgId={selectedOrgId}
-              onSelectOrg={handleSelectOrg}
-            />
-
-            {/* Personal Details Form */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl space-y-5">
-              <div className="flex items-center gap-2 border-b border-slate-800/80 pb-4">
-                <User className="h-5 w-5 text-blue-400" />
-                <h2 className="text-base font-bold text-white">Personal Information</h2>
-              </div>
-
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <ImageUpload
-                  label="Profile Avatar / Photo"
-                  value={userImage}
-                  onChange={(val) => setUserImage(val || '')}
-                  aspectRatio="avatar"
-                  helperText="Upload profile photo (PNG, JPG, WEBP)"
-                />
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Display Name
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="w-full rounded-2xl border border-slate-800 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Primary Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={userObj.email || ''}
-                    disabled
-                    className="w-full rounded-2xl border border-slate-800/60 bg-slate-950/40 px-4 py-3 text-sm text-slate-500 cursor-not-allowed"
-                  />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Your email is securely verified via Supabase Auth.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  {saveSuccess ? (
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 animate-in fade-in">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Changes saved successfully!
-                    </span>
-                  ) : <span />}
-
-                  <button
-                    type="submit"
-                    disabled={savingProfile || (name === userObj.name && userImage === (userObj.image || ''))}
-                    aria-busy={savingProfile ? 'true' : undefined}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {savingProfile ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        <span>Save Changes</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Cryptographic Identity & Zero-Knowledge Security */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-800/80 pb-4">
-                <Key className="h-5 w-5 text-indigo-400" />
-                <div>
-                  <h2 className="text-base font-bold text-white">Cryptographic Blind Fingerprint</h2>
-                  <p className="text-xs text-slate-400">
-                    Deterministic SHA-256 identifier used to sign and audit your anonymous ballot receipts.
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-xs text-blue-400 break-all select-all">
-                    {fingerprint}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleCopyFingerprint}
-                    className="shrink-0 flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
-                  >
-                    {copiedFingerprint ? (
-                      <>
-                        <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        <span className="text-emerald-400">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 p-4 text-xs text-slate-300">
-                <Lock className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white">Zero-Knowledge Isolation:</strong> Your ballot selections are never linked to your personal profile, email, or name in the database.
-                </div>
-              </div>
-            </div>
-
-            {/* Notification Preferences */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-800/80 pb-4">
-                <Bell className="h-5 w-5 text-purple-400" />
-                <h2 className="text-base font-bold text-white">Notification Preferences</h2>
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center justify-between p-3 rounded-2xl border border-slate-800 bg-slate-950/40 cursor-pointer hover:bg-slate-950/70 transition-colors">
-                  <div>
-                    <div className="text-xs font-bold text-white">Ballot Invitations</div>
-                    <div className="text-[11px] text-slate-400">Receive email alerts when you are enrolled in an election</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.ballotInvites}
-                    onChange={(e) => setNotifications({ ...notifications, ballotInvites: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-3 rounded-2xl border border-slate-800 bg-slate-950/40 cursor-pointer hover:bg-slate-950/70 transition-colors">
-                  <div>
-                    <div className="text-xs font-bold text-white">Certified Results Announcements</div>
-                    <div className="text-[11px] text-slate-400">Receive certified results links when election polls close</div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notifications.resultsPublished}
-                    onChange={(e) => setNotifications({ ...notifications, resultsPublished: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Organization Memberships */}
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-emerald-400" />
-                  <h2 className="text-base font-bold text-white">Your Organizations</h2>
-                </div>
-                <Link
-                  href="/onboarding"
-                  className="text-xs font-bold text-blue-400 hover:text-blue-300"
-                >
-                  + New Org
-                </Link>
-              </div>
-
-              {memberships.length > 0 ? (
-                <div className="space-y-3">
-                  {memberships.map((m) => (
-                    <div
-                      key={m.id}
-                      className="group rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition-all hover:border-slate-700 hover:bg-slate-950"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-xs text-white group-hover:text-blue-400 transition-colors line-clamp-1">
-                            {m.organization?.name || 'Organization'}
-                          </h3>
-                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">
-                            /org/{m.organization?.slug}
-                          </p>
-                        </div>
-                        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-300 border border-slate-700">
-                          {m.role}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between">
-                        <span className="text-[10px] text-slate-500">
-                          Joined {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : 'Active'}
-                        </span>
-                        {m.organization && (
-                          <Link
-                            href={`/org/${m.organization.id}/dashboard`}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 hover:text-blue-300"
-                          >
-                            <span>Launch</span>
-                            <ChevronRight className="h-3 w-3" />
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xl sm:text-2xl font-black shadow-lg shadow-blue-500/20 shrink-0 overflow-hidden">
+              {userObj.image ? (
+                <img src={userObj.image} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-800 p-6 text-center">
-                  <p className="text-xs text-slate-400 mb-3">No organization memberships yet.</p>
-                  <Link
-                    href="/onboarding"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:underline"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Create an Organization</span>
-                  </Link>
-                </div>
+                initials
               )}
             </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  {displayName}
+                </h1>
+                {userObj.displayName && userObj.displayName !== userObj.name && (
+                  <span className="text-xs text-slate-400 font-normal">({userObj.name})</span>
+                )}
+              </div>
+              <p className="text-xs text-blue-400 font-semibold mt-0.5">{designation}</p>
+              <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-400">
+                <span>{email}</span>
+                <span>&bull;</span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Member since{' '}
+                  {userObj.createdAt
+                    ? new Date(userObj.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : '2026'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/profile/personal"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-500/20 self-start sm:self-center"
+          >
+            Edit Profile
+          </Link>
+        </div>
+      </div>
+
+      {/* Telemetry Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Organizations */}
+        <Link
+          href="/profile/organizations"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Organizations
+            </span>
+            <Building2 className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="text-2xl font-black text-white mt-2">{orgCount}</div>
+          <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>Workspaces joined or owned</span>
+          </div>
+        </Link>
+
+        {/* Certificates */}
+        <Link
+          href="/profile/certificates"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Certificates
+            </span>
+            <Award className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="text-2xl font-black text-white mt-2">{certificatesCount}</div>
+          <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>Victory & civic awards</span>
+          </div>
+        </Link>
+
+        {/* Active Plan */}
+        <Link
+          href="/profile/subscription"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Workspace Tier
+            </span>
+            <Sparkles className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="text-lg font-black text-white mt-2 truncate">
+            {currentSub?.plan?.name || 'Community Free'}
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1 truncate">
+            {currentSub?.organization?.name || 'Personal Workspace'}
+          </div>
+        </Link>
+
+        {/* Security Fingerprint */}
+        <Link
+          href="/profile/security"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Voter Ledger
+            </span>
+            <Shield className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+          </div>
+          <div className="text-sm font-mono font-bold text-emerald-400 mt-2 truncate">
+            {profile?.cryptographicFingerprint?.slice(0, 12)}...
+          </div>
+          <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>Zero-Knowledge Authenticated</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Quick Navigation Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link
+          href="/profile/personal"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm">Personal Information & Bio</div>
+              <p className="text-xs text-slate-400">Update display name, title, bio, and privacy flags</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </Link>
+
+        <Link
+          href="/profile/organizations"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm">My Organizations & Roles</div>
+              <p className="text-xs text-slate-400">Manage joined workspaces and public portals</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </Link>
+
+        <Link
+          href="/profile/certificates"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm">Certificates & Achievements</div>
+              <p className="text-xs text-slate-400">View and download your official election awards</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </Link>
+
+        <Link
+          href="/profile/security"
+          className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 hover:border-slate-700 transition-all flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm">Account Security & Fingerprint</div>
+              <p className="text-xs text-slate-400">Cryptographic voter identity and password security</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </Link>
+      </div>
+
+      {/* Cryptographic Voter Fingerprint Quick Banner */}
+      <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <Key className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white">Cryptographic Voter Fingerprint</div>
+            <div className="font-mono text-xs text-slate-400 break-all select-all">
+              {profile?.cryptographicFingerprint || 'Generating...'}
+            </div>
           </div>
         </div>
-      </main>
-    </div>
-  );
-}
 
-export default function ProfilePage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-950">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
-      }
-    >
-      <ProfileContent />
-    </Suspense>
+        <button
+          onClick={handleCopyFingerprint}
+          className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 self-start sm:self-center"
+        >
+          {copiedFingerprint ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5" />
+              <span>Copy Fingerprint</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
